@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('hasil_topse', function (Blueprint $table) {
+        Schema::create('hasil_topsis', function (Blueprint $table) {
             $table->id('id_hasil');
             $table->foreignId('lokasi_wisata_id')->constrained('lokasi_wisata', 'id_lokasi_wisata')->onDelete('cascade');
             $table->string('jarak_positif');
             $table->string('jarak_negative');
-            $table->string('tipe_peferensi');
+            $table->string('tipe_preferensi');
             $table->string('rangking');
         });
     }

@@ -68,6 +68,8 @@ class HasilTopsisController extends Controller
             }
         }
 
+        // dd($matrixKeputusan);
+
         // Pembobotan Matriks
         $pembobotan = [];
         foreach ($matrixTernormalisasi as $lokasiId => $nilai) {
@@ -79,14 +81,23 @@ class HasilTopsisController extends Controller
             }
         }
 
-        // Solusi Ideal
+        // Solusi Ideal berdasarkan tipe kriteria (benefit/cost)
         $idealPositif = [];
         $idealNegatif = [];
-        foreach ($namaKriteriaMap as $id => $nama) {
+
+        foreach ($kriteria as $k) {
+            $nama = $namaKriteriaMap[$k->id_kriteria];
             $values = array_column($pembobotan, $nama);
-            $idealPositif[$nama] = !empty($values) ? round(max($values), 3) : 0.0000;
-            $idealNegatif[$nama] = !empty($values) ? round(min($values), 3) : 0.0000;
+
+            if (strtolower($k->tipe_kriteria) === 'benefit') {
+                $idealPositif[$nama] = !empty($values) ? round(max($values), 3) : 0.000;
+                $idealNegatif[$nama] = !empty($values) ? round(min($values), 3) : 0.000;
+            } else { // cost
+                $idealPositif[$nama] = !empty($values) ? round(min($values), 3) : 0.000;
+                $idealNegatif[$nama] = !empty($values) ? round(max($values), 3) : 0.000;
+            }
         }
+
 
         // Jarak ke Solusi Ideal
         $dPlus = [];
@@ -194,9 +205,5 @@ class HasilTopsisController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(HasilTopsis $hasilTopsis)
-    {
-
-
-    }
+    public function destroy(HasilTopsis $hasilTopsis) {}
 }
