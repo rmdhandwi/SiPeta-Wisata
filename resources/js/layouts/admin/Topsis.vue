@@ -9,7 +9,10 @@ const sidebarNavItems: NavItem[] = [
     {
         title: 'Perhitungan TOPSIS',
         href: '/admin/topsis',
-        match: ['/admin/topsis', '/admin/potenti/', '/admin/hasil/'],
+    },
+    {
+        title: 'Potensi Wisata',
+        href: '/admin/potensi',
     },
 ];
 

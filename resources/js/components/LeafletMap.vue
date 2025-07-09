@@ -14,7 +14,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    (e: 'update:latlng', coords: { lat: number; lng: number }): void;
+    (e: 'update:latlng', coords: { lat: number; lng: number}): void;
 }>();
 
 const mapId = props.id || 'leaflet-map';
@@ -50,7 +50,7 @@ const initMap = async () => {
 
         marker?.setLatLng([lat, lng]);
 
-        emit('update:latlng', { lat, lng }); // kirim ke parent
+        emit('update:latlng', { lat, lng}); // kirim ke parent
     });
 };
 

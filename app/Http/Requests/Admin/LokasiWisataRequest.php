@@ -31,7 +31,7 @@ class LokasiWisataRequest extends FormRequest
                     'max:255',
                     Rule::unique('lokasi_wisata', 'nama_lokasi_wisata')->ignore($this->id_lokasi_wisata, 'id_lokasi_wisata'),
                 ],
-                in_array($field, ['longitude', 'latitute']) => ['required', 'numeric'],
+                in_array($field, ['longitude', 'latitude']) => ['required', 'numeric'],
                 default => ['required', 'string'],
             };
         }
@@ -58,7 +58,7 @@ class LokasiWisataRequest extends FormRequest
                 $messages["$field.max"] = "$label terlalu panjang.";
             }
 
-            if (in_array($field, ['longitude', 'latitute'])) {
+            if (in_array($field, ['longitude', 'latitude'])) {
                 $messages["$field.numeric"] = "$label harus berupa angka.";
             }
 

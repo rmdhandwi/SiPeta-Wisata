@@ -27,12 +27,13 @@ const form = useForm({
     nama_colom: '',
 });
 
-const selectedLocation = ref({ lat: -2.533, lng: 140.703 });
+const selectedLocation = ref({ lat: -2.533, lng: 140.703, nama: '' });
 
 function showMap(data: LokasiWisataItem) {
     selectedLocation.value = {
-        lat: data.latitute || -2.533,
+        lat: data.latitude || -2.533,
         lng: data.longitude || 140.703,
+        nama: data.nama_lokasi_wisata,
     };
     visible.value = true;
 }
@@ -51,10 +52,10 @@ onMounted(async () => {
 
         if (lokasiWisata.value.length > 0) {
             // Kolom yang ingin ditampilkan saja
-            const hiddenFields = ['id_lokasi_wisata', 'jenis_wisata_id','jenis_wisata', 'longitude', 'latitute'];
+            const hiddenFields = ['id_lokasi_wisata', 'jenis_wisata_id', 'jenis_wisata', 'longitude', 'latitude'];
 
             columns.value = Object.keys(lokasiWisata.value[0]).filter(
-                (key) => typeof lokasiWisata.value[0][key] !== 'object' && !hiddenFields.includes(key)
+                (key) => typeof lokasiWisata.value[0][key] !== 'object' && !hiddenFields.includes(key),
             );
         }
     } catch (error: any) {
@@ -230,8 +231,13 @@ function doDestroy(id: number) {
                                             icon="pi pi-trash"
                                             @click="confirmDelete(slotProps.data.id_lokasi_wisata)"
                                         />
-                                        <Button v-if="Number(slotProps.data.longitude) && Number(slotProps.data.latitute)"
-                                        severity="info" size="small" icon="pi pi-map" @click="() => showMap(slotProps.data)" />
+                                        <Button
+                                            v-if="Number(slotProps.data.longitude) && Number(slotProps.data.latitude)"
+                                            severity="info"
+                                            size="small"
+                                            icon="pi pi-map"
+                                            @click="() => showMap(slotProps.data)"
+                                        />
                                     </div>
                                 </template>
                             </Column>
@@ -259,7 +265,7 @@ function doDestroy(id: number) {
             v-model:visible="visible"
             maximizable
             modal
-            header="Header"
+            :header="'Lokasi Wisata ' + selectedLocation.nama"
             :style="{ width: '50vw' }"
             :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
         >
@@ -269,5 +275,3 @@ function doDestroy(id: number) {
         </Dialog>
     </AppLayout>
 </template>
-
-

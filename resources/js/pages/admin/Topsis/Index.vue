@@ -31,10 +31,6 @@ const breadcrumbItems = [
         title: 'Perhitungan TOPSIS',
         href: '/admin/topsis',
     },
-    {
-        title: 'Perhitungan TOPSIS',
-        href: '/admin/potensi',
-    },
 ];
 
 function formatHeader(col: string): string {

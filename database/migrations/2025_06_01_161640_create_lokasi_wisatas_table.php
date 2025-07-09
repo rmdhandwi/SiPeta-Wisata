@@ -19,8 +19,8 @@ return new class extends Migration
             $table->string('keamanan');
             $table->string('transportasi');
             $table->string('akses_lokasi');
-            $table->string('longitude');
-            $table->string('latitute');
+            $table->float('longitude');
+            $table->float('latitute');
         });
     }
 

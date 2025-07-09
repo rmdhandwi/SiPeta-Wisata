@@ -13,11 +13,15 @@ return new class extends Migration
     {
         Schema::create('hasil_topsis', function (Blueprint $table) {
             $table->id('id_hasil');
-            $table->foreignId('lokasi_wisata_id')->constrained('lokasi_wisata', 'id_lokasi_wisata')->onDelete('cascade');
-            $table->string('jarak_positif');
-            $table->string('jarak_negative');
-            $table->string('tipe_preferensi');
-            $table->string('rangking');
+
+            $table->foreignId('lokasi_wisata_id')
+                ->constrained('lokasi_wisata', 'id_lokasi_wisata')
+                ->onDelete('cascade');
+
+            $table->float('jarak_positif');
+            $table->float('jarak_negative');
+            $table->float('tipe_preferensi');
+            $table->unsignedInteger('rangking');
         });
     }
 
@@ -26,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('hasil_topse');
+        Schema::dropIfExists('hasil_topsis');
     }
 };

@@ -5,7 +5,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { SharedData, type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookMarked, ClipboardList, FileBarChart, FileUser, LayoutGrid, MapPinned } from 'lucide-vue-next';
+import { BookMarked, Calculator, ClipboardList, FileBarChart, FileUser, LayoutGrid, Map, MapPinned } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from './AppLogo.vue';
 
@@ -49,8 +49,13 @@ const mainNavItems = computed<NavItem[]>(() => {
                 {
                     title: 'Topsis dan Hasil',
                     href: '/admin/topsis',
-                    icon: FileUser,
-                    match: ['/admin/topsis', '/admin/potensi', '/admin/hasil'],
+                    icon: Calculator,
+                    match: ['/admin/topsis', '/admin/potensi'],
+                },
+                {
+                    title: 'Pemetaan',
+                    href: '/admin/pemetaan',
+                    icon: Map,
                 },
             ];
         case 2: // Kepala Dinas

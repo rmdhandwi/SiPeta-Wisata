@@ -92,7 +92,7 @@ function doSubmit() {
     isEdit ? form.put(url, callback) : form.post(url, callback);
 }
 
-const visibleFields = computed(() => props.fields.filter((f) => !['id_lokasi_wisata', 'latitute', 'longitude'].includes(f)));
+const visibleFields = computed(() => props.fields.filter((f) => !['id_lokasi_wisata', 'latitude', 'longitude'].includes(f)));
 
 function formatLabel(field: string): string {
   return field
@@ -154,16 +154,16 @@ function formatLabel(field: string): string {
                             </div>
 
                             <div class="space-y-2">
-                                <Label for="latitute">Latitude</Label>
+                                <Label for="latitude">Latitude</Label>
                                 <InputText
-                                    v-model="form.latitute"
+                                    v-model="form.latitude"
                                     type="number"
                                     class="w-full"
-                                    :invalid="!!form.errors.latitute"
+                                    :invalid="!!form.errors.latitude"
                                     placeholder="Contoh: -2.533"
                                 />
-                                <Message v-if="form.errors.latitute" severity="error" size="small" variant="simple">
-                                    {{ form.errors.latitute }}
+                                <Message v-if="form.errors.latitude" severity="error" size="small" variant="simple">
+                                    {{ form.errors.latitude }}
                                 </Message>
                             </div>
                         </div>
@@ -171,11 +171,11 @@ function formatLabel(field: string): string {
                         <div class="col-span-full">
                             <span class="text-xs">(Silakan pilih titik lokasi tanpa mengisi Longitude & Latitude)</span>
                             <LeafletMap
-                                :lat="parseFloat(form.latitute) || -2.533"
+                                :lat="parseFloat(form.latitude) || -2.533"
                                 :lng="parseFloat(form.longitude) || 140.703"
                                 @update:latlng="
                                     ({ lat, lng }) => {
-                                        form.latitute = lat.toFixed(6);
+                                        form.latitude = lat.toFixed(6);
                                         form.longitude = lng.toFixed(6);
                                     }
                                 "

@@ -66,8 +66,6 @@ class LokasiWisata extends Model
     }
 
 
-
-
     // Opsional jika ada relasi
     public function jenisWisata()
     {

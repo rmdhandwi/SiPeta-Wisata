@@ -7,6 +7,7 @@ use App\Models\Kriteria;
 use App\Models\LokasiWisata;
 use App\Models\NilaiAlternatif;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 
@@ -145,6 +146,21 @@ class HasilTopsisController extends Controller
             $dMinNamed[$lokasiMap[$id] ?? $id] = $dMin[$id];
         }
 
+        // Hapus semua data hasil_topsis dan reset id
+        DB::table('hasil_topsis')->truncate();
+
+        // Simpan hasil baru
+        foreach ($peringkat as $entry) {
+            $lokasiId = array_search($entry['id'], $lokasiMap); // dapatkan id asli dari nama
+            HasilTopsis::create([
+                'lokasi_wisata_id' => $lokasiId,
+                'jarak_positif' => $dPlus[$lokasiId],
+                'jarak_negative' => $dMin[$lokasiId],
+                'tipe_preferensi' => $preferensi[$lokasiId],
+                'rangking' => $entry['rank'],
+            ]);
+        }
+
         return Inertia::render('admin/Topsis/Index', [
             'matrixKeputusan' => array_values($matrixKeputusan),
             'normalisasi' => array_values($matrixTernormalisasi),
@@ -165,45 +181,49 @@ class HasilTopsisController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function potensi()
     {
-        //
+        // Ambil semua hasil TOPSIS yang sudah diurut berdasarkan ranking
+        $hasil = HasilTopsis::hasilAll();
+
+        // Format data untuk ditampilkan di frontend
+        $data = $hasil->map(function ($item) {
+            return [
+                'alternatif'       => $item->lokasiWisata->nama_lokasi_wisata ?? 'Tidak diketahui',
+                'jarak_positif'    => round($item->jarak_positif, 3),
+                'jarak_negatif'    => round($item->jarak_negative, 3),
+                'preferensi'       => round($item->tipe_preferensi, 3),
+                'rangking'         => $item->rangking,
+            ];
+        });
+
+        return Inertia::render('admin/Topsis/Potensi', [
+            'hasil' => $data,
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function pemetaan()
     {
-        //
-    }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(HasilTopsis $hasilTopsis)
-    {
-        //
-    }
+        $lokasi = DB::table('lokasi_wisata as lw')
+            ->join('jenis_wisata as jw', 'lw.jenis_wisata_id', '=', 'jw.id_jenis_wisata')
+            ->join('hasil_topsis as ht', 'lw.id_lokasi_wisata', '=', 'ht.lokasi_wisata_id')
+            ->select(
+                'lw.nama_lokasi_wisata as nama',
+                'jw.nama_jenis_wisata as jenis',
+                'lw.*',
+                'ht.rangking as rank',
+                'ht.tipe_preferensi as preferensi'
+            )
+            ->get();
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(HasilTopsis $hasilTopsis)
-    {
-        //
-    }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, HasilTopsis $hasilTopsis)
-    {
-        //
-    }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(HasilTopsis $hasilTopsis) {}
+        return Inertia::render('admin/Topsis/Pemetaan', [
+            'lokasi' => $lokasi,
+        ]);
+    }
 }

@@ -120,6 +120,6 @@ Route::middleware(['auth', 'role:1'])
                 Route::get('/', [HasilTopsisController::class, 'index'])->name('index');
             });
 
-        Route::get('/potensi', [HasilTopsisController::class, 'index'])->name('potensi');
-        Route::get('/hasil', [HasilTopsisController::class, 'index'])->name('hasil');
+        Route::get('/potensi', [HasilTopsisController::class, 'potensi'])->name('potensi');
+        Route::get('/pemetaan', [HasilTopsisController::class, 'pemetaan'])->name('pemetaan');
     });

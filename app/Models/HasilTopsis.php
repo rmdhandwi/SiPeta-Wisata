@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class HasilTopsis extends Model
 {
     // Jika menggunakan UUID atau custom id yang bukan auto-increment, atur key-nya
-    protected $primaryKey = 'id_jenis_wisata';
+    protected $primaryKey = 'id_hasil';
 
     // Jika primary key bukan auto-increment (misal UUID), ubah ini:
     // public $incrementing = false;
@@ -15,27 +15,32 @@ class HasilTopsis extends Model
     // Jika id bukan integer (misal UUID string)
     // protected $keyType = 'string';
 
+
     protected $fillable = [
-        'id_jenis_wisata',
-        'nama_jenis_wisata',
-        'keterangan',
+        'lokasi_wisata_id',
+        'jarak_positif',
+        'jarak_negative',
+        'tipe_preferensi',
+        'rangking',
     ];
 
     // Jika tidak menggunakan timestamps
     public $timestamps = false;
 
     // Optional: Table name (jika bukan jamak dari nama model)
-    protected $table = 'jenis_wisata';
+    protected $table = 'hasil_topsis';
 
-    public function hasilAll()
-    {
-        return JenisWisata::select('id_jenis_wisata', 'nama_jenis_wisata', 'keterangan')
-            ->orderBy('nama_jenis_wisata', 'asc')
-            ->get();
-    }
-
+    // Relasi ke lokasi_wisata (1 hasil topsis hanya milik 1 lokasi)
     public function lokasiWisata()
     {
-        return $this->hasMany(LokasiWisata::class, 'jenis_wisata_id', 'id_jenis_wisata');
+        return $this->belongsTo(LokasiWisata::class, 'lokasi_wisata_id', 'id_lokasi_wisata');
+    }
+
+    // Static method untuk mengambil semua hasil TOPSIS terurut
+    public static function hasilAll()
+    {
+        return self::with('lokasiWisata')
+            ->orderBy('rangking', 'asc')
+            ->get();
     }
 }
