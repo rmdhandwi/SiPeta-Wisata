@@ -8,6 +8,16 @@ defineProps<{
 }>();
 
 const page = usePage<SharedData>();
+
+const isActive = (item: NavItem) => {
+    const currentPath = page.url.split('?')[0];
+
+    if (item.match && item.match.length) {
+        return item.match.some((path) => (path.endsWith('*') ? currentPath.startsWith(path.replace('*', '')) : currentPath === path));
+    }
+
+    return currentPath === item.href;
+};
 </script>
 
 <template>
@@ -15,10 +25,7 @@ const page = usePage<SharedData>();
         <SidebarGroupLabel>Platform</SidebarGroupLabel>
         <SidebarMenu>
             <SidebarMenuItem v-for="item in items" :key="item.title">
-                <SidebarMenuButton 
-                    as-child :is-active="item.href === page.url"
-                    :tooltip="item.title"
-                >
+                <SidebarMenuButton as-child :is-active="isActive(item)" :tooltip="item.title">
                     <Link :href="item.href">
                         <component :is="item.icon" />
                         <span>{{ item.title }}</span>

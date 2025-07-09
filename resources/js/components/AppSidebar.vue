@@ -3,31 +3,88 @@ import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-vue-next';
+import { SharedData, type NavItem } from '@/types';
+import { Link, usePage } from '@inertiajs/vue3';
+import { BookMarked, ClipboardList, FileBarChart, FileUser, LayoutGrid, MapPinned } from 'lucide-vue-next';
+import { computed } from 'vue';
 import AppLogo from './AppLogo.vue';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutGrid,
-    },
-];
+const page = usePage<SharedData>();
 
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Github Repo',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
-];
+const role = computed(() => page.props.auth?.user.role); // Ambil role dari backend
+
+const mainNavItems = computed<NavItem[]>(() => {
+    switch (role.value) {
+        case 1: // Admin
+            return [
+                {
+                    title: 'Dashboard',
+                    href: '/dashboard',
+                    icon: LayoutGrid,
+                },
+                {
+                    title: 'Jenis Wisata',
+                    href: '/admin/jeniswisata',
+                    icon: BookMarked,
+                    match: ['/admin/jeniswisata', '/admin/jeniswisata/*'],
+                },
+                {
+                    title: 'Lokasi Wisata',
+                    href: '/admin/lokasiwisata',
+                    icon: MapPinned,
+                    match: ['/admin/lokasiwisata', '/admin/lokasiwisata/*'],
+                },
+                {
+                    title: 'Kriteria',
+                    href: '/admin/kriteria',
+                    icon: ClipboardList,
+                    match: ['/admin/kriteria', '/admin/kriteria/*', '/admin/subkriteria', '/admin/subkriteria/*'],
+                },
+                {
+                    title: 'Alternatif',
+                    href: '/admin/alternatif',
+                    icon: FileUser,
+                    match: ['/admin/alternatif', '/admin/alternatif/*'],
+                },
+                {
+                    title: 'Topsis dan Hasil',
+                    href: '/admin/topsis',
+                    icon: FileUser,
+                    match: ['/admin/topsis', '/admin/potensi', '/admin/hasil'],
+                },
+            ];
+        case 2: // Kepala Dinas
+            return [
+                {
+                    title: 'Dashboard',
+                    href: '/dashboard',
+                    icon: LayoutGrid,
+                },
+                {
+                    title: 'Laporan Wisata',
+                    href: '/laporan',
+                    icon: FileBarChart,
+                },
+            ];
+        case 3: // Investor
+            return [
+                {
+                    title: 'Dashboard',
+                    href: '/dashboard',
+                    icon: LayoutGrid,
+                },
+                {
+                    title: 'Investasi Saya',
+                    href: '/investasi',
+                    icon: BookMarked,
+                },
+            ];
+        default:
+            return [{ title: 'Dashboard', href: '/dashboard', icon: LayoutGrid }];
+    }
+});
+
+const footerNavItems: NavItem[] = [];
 </script>
 
 <template>

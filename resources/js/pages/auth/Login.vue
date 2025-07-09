@@ -15,7 +15,7 @@ defineProps<{
 }>();
 
 const form = useForm({
-    email: '',
+    username: '',
     password: '',
     remember: false,
 });
@@ -28,66 +28,79 @@ const submit = () => {
 </script>
 
 <template>
-    <AuthBase title="Log in to your account" description="Enter your email and password below to log in">
-        <Head title="Log in" />
+    <AuthBase
+        title="Masuk ke SiPeta-Wisata"
+        description="Masukkan username dan kata sandi Anda untuk memulai menjelajahi wisata."
+    >
+        <Head title="Masuk" />
 
-        <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-600">
+        <!-- Status Message -->
+        <div
+            v-if="status"
+            class="mb-4 text-center text-sm font-medium text-blue-600"
+        >
             {{ status }}
         </div>
 
-        <form @submit.prevent="submit" class="flex flex-col gap-6">
+        <!-- Login Form -->
+        <form @submit.prevent="submit" class="flex flex-col gap-6 text-black">
             <div class="grid gap-6">
+                <!-- Username -->
                 <div class="grid gap-2">
-                    <Label for="email">Email address</Label>
+                    <Label for="username" class="text-black">Username</Label>
                     <Input
-                        id="email"
-                        type="email"
-                        required
+                        id="username"
+                        type="text"
                         autofocus
                         :tabindex="1"
-                        autocomplete="email"
-                        v-model="form.email"
-                        placeholder="email@example.com"
+                        :aria-invalid="!!form.errors.username"
+                        autocomplete="username"
+                        v-model="form.username"
+                        placeholder="Masukkan username"
+                        class="text-black"
                     />
-                    <InputError :message="form.errors.email" />
+                    <InputError :message="form.errors.username" />
                 </div>
 
+                <!-- Password -->
                 <div class="grid gap-2">
                     <div class="flex items-center justify-between">
-                        <Label for="password">Password</Label>
-                        <TextLink v-if="canResetPassword" :href="route('password.request')" class="text-sm" :tabindex="5">
-                            Forgot password?
-                        </TextLink>
+                        <Label for="password" class="text-black">Kata Sandi</Label>
                     </div>
                     <Input
                         id="password"
                         type="password"
-                        required
+                        :aria-invalid="!!form.errors.password"
                         :tabindex="2"
                         autocomplete="current-password"
                         v-model="form.password"
-                        placeholder="Password"
+                        placeholder="••••••••"
+                        class="text-black"
                     />
                     <InputError :message="form.errors.password" />
                 </div>
 
-                <div class="flex items-center justify-between">
-                    <Label for="remember" class="flex items-center space-x-3">
-                        <Checkbox id="remember" v-model="form.remember" :tabindex="3" />
-                        <span>Remember me</span>
-                    </Label>
-                </div>
-
-                <Button type="submit" class="mt-4 w-full" :tabindex="4" :disabled="form.processing">
+                <!-- Submit Button -->
+                <Button
+                    type="submit"
+                    class="mt-4 w-full bg-[#1e7fce] hover:bg-[#20639a] cursor-pointer text-white transition-all"
+                    :tabindex="4"
+                    :disabled="form.processing"
+                >
                     <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
-                    Log in
+                    Masuk
                 </Button>
             </div>
 
-            <div class="text-center text-sm text-muted-foreground">
-                Don't have an account?
-                <TextLink :href="route('register')" :tabindex="5">Sign up</TextLink>
+            <!-- Sign up link (optional) -->
+            
+            <div class="text-center text-sm text-gray-600">
+                Belum punya akun?
+                <TextLink :href="route('register')" :tabindex="5" class="underline underline-offset-4 hover:underline hover:text-[#20639a] dark:hover:text-[#20639a] dark:text-gray-400 cursor-pointer transition-all">Daftar sekarang</TextLink>
             </div>
+           
         </form>
     </AuthBase>
 </template>
+
+

@@ -5,6 +5,9 @@ import tailwindcss from "@tailwindcss/vite";
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 
+import Components from 'unplugin-vue-components/vite';
+import { PrimeVueResolver } from 'unplugin-vue-components/resolvers';
+
 export default defineConfig({
     plugins: [
         laravel({
@@ -20,6 +23,12 @@ export default defineConfig({
                     includeAbsolute: false,
                 },
             },
+        }),
+
+        // ⬇️ Plugin auto-import PrimeVue
+        Components({
+            resolvers: [PrimeVueResolver()],
+            dts: 'resources/js/components.d.ts', // optional: auto-generated typing
         }),
     ],
     resolve: {

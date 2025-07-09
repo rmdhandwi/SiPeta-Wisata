@@ -13,6 +13,43 @@
             "options": {
                 "tabWidth": 2
             }
+        },
+        {
+            "files": "**/*.blade.php",
+            "options": {
+                "printWidth": 120,
+                "parser": "blade"
+            }
+        },
+        {
+            "files": "**/*.vue",
+            "options": {
+                "parser": "vue"
+            }
+        },
+        {
+            "files": "**/*.php",
+            "options": {
+                "parser": "php"
+            }
+        },
+        {
+            "files": "**/*.{js,jsx,ts,tsx}",
+            "options": {
+                "parser": "babel"
+            }
+        },
+        {
+            "files": "**/*.{css,scss,sass,less}",
+            "options": {
+                "parser": "css"
+            }
+        },
+        {
+            "files": "**/*.html",
+            "options": {
+                "parser": "html"
+            }
         }
-    ]
+    ]   
 }
