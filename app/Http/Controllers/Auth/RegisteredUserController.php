@@ -41,10 +41,11 @@ class RegisteredUserController extends Controller
         ]);
 
         event(new Registered($user));
-        Auth::login($user);
 
-        return to_route('dashboard');
+        // Tidak langsung login user
+        return redirect()->route('login')->with('success', 'Registrasi berhasil. Silakan login.');
     }
+
 
     /**
      * Validation rules for registration.

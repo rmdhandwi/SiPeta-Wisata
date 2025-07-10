@@ -15,7 +15,7 @@ const props = defineProps<{
         longitude: number;
         fasilitas: string;
         keamanan: string;
-        akses: string;
+        akses_lokasi: string;
         rank?: number;
         preferensi?: number;
     }>;
@@ -83,7 +83,7 @@ const updateMarkers = () => {
       <tr><td><b>Jenis</b></td><td>: ${lokasi.jenis}</td></tr>
       <tr><td><b>Fasilitas</b></td><td>: ${lokasi.fasilitas || '-'}</td></tr>
       <tr><td><b>Keamanan</b></td><td>: ${lokasi.keamanan || '-'}</td></tr>
-      <tr><td><b>Akses</b></td><td>: ${lokasi.akses || '-'}</td></tr>
+      <tr><td><b>Akses</b></td><td>: ${lokasi.akses_lokasi || '-'}</td></tr>
       ${lokasi.rank !== undefined ? `<tr><td><b>Ranking</b></td><td>: ${lokasi.rank}</td></tr>` : ''}
       ${lokasi.preferensi !== undefined ? `<tr><td><b>Preferensi</b></td><td>: ${lokasi.preferensi}</td></tr>` : ''}
     </table>

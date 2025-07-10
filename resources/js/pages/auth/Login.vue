@@ -2,12 +2,14 @@
 import InputError from '@/components/InputError.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { SharedData } from '@/types';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
+import { watch } from 'vue';
+import { useToast } from 'vue-toast-notification';
 
 defineProps<{
     status?: string;
@@ -20,6 +22,36 @@ const form = useForm({
     remember: false,
 });
 
+const page = usePage<SharedData>();
+const toast = useToast();
+
+
+watch(
+    () => page.props.flash?.error,
+    (message) => {
+        if (message) {
+            toast.error(message, {
+                position: 'top-right',
+                duration: 3000,
+            });
+        }
+    },
+    { immediate: true }
+);
+
+watch(
+    () => page.props.flash?.success,
+    (message) => {
+        if (message) {
+            toast.success(message, {
+                position: 'top-right',
+                duration: 3000,
+            });
+        }
+    },
+    { immediate: true }
+);
+
 const submit = () => {
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
@@ -28,17 +60,11 @@ const submit = () => {
 </script>
 
 <template>
-    <AuthBase
-        title="Masuk ke SiPeta-Wisata"
-        description="Masukkan username dan kata sandi Anda untuk memulai menjelajahi wisata."
-    >
+    <AuthBase title="Masuk ke SiPeta-Wisata" description="Masukkan username dan kata sandi Anda untuk memulai menjelajahi wisata.">
         <Head title="Masuk" />
 
         <!-- Status Message -->
-        <div
-            v-if="status"
-            class="mb-4 text-center text-sm font-medium text-blue-600"
-        >
+        <div v-if="status" class="mb-4 text-center text-sm font-medium text-blue-600">
             {{ status }}
         </div>
 
@@ -83,7 +109,7 @@ const submit = () => {
                 <!-- Submit Button -->
                 <Button
                     type="submit"
-                    class="mt-4 w-full bg-[#1e7fce] hover:bg-[#20639a] cursor-pointer text-white transition-all"
+                    class="mt-4 w-full cursor-pointer bg-[#1e7fce] text-white transition-all hover:bg-[#20639a]"
                     :tabindex="4"
                     :disabled="form.processing"
                 >
@@ -93,14 +119,16 @@ const submit = () => {
             </div>
 
             <!-- Sign up link (optional) -->
-            
+
             <div class="text-center text-sm text-gray-600">
                 Belum punya akun?
-                <TextLink :href="route('register')" :tabindex="5" class="underline underline-offset-4 hover:underline hover:text-[#20639a] dark:hover:text-[#20639a] dark:text-gray-400 cursor-pointer transition-all">Daftar sekarang</TextLink>
+                <TextLink
+                    :href="route('register')"
+                    :tabindex="5"
+                    class="cursor-pointer underline underline-offset-4 transition-all hover:text-[#20639a] hover:underline dark:text-gray-400 dark:hover:text-[#20639a]"
+                    >Daftar sekarang</TextLink
+                >
             </div>
-           
         </form>
     </AuthBase>
 </template>
-
-

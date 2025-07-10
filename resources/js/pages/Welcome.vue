@@ -2,16 +2,18 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { useToast } from 'vue-toast-notification';
 import { watch } from 'vue';
+import { SharedData } from '@/types';
 
-const page = usePage();
+const page = usePage<SharedData>();
 const toast = useToast();
+
 
 // Watch flash.success dan tampilkan toast jika ada
 watch(
-  () => page.props.flash?.success,
+  () => page.props.flash?.error,
   (message) => {
     if (message) {
-      toast.success(message, {
+      toast.error(message, {
         position: 'top-right',
         duration: 3000,
       });

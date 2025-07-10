@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\inverstor\InvestorController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -7,11 +8,26 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
+Route::get('investor', function () {
+    return Inertia::render('investor/Index');
+})->middleware(['auth', 'verified', 'role:3'])->name('investor.index');
+
+Route::middleware(['auth', 'role:3'])->group(
+    function () {
+        Route::get('/investor', [InvestorController::class, 'index'])->name('investor.index');
+    }
+);
+
+
+Route::get('kepala', function () {
+    Route::get('/', [InvestorController::class, 'index'])->name('investor.index');
+})->middleware(['auth', 'verified', 'role:2']);
+
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified', 'role:1'])->name('dashboard');
 
-require __DIR__.'/admin.php';
-require __DIR__.'/api.php';
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/admin.php';
+require __DIR__ . '/api.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';

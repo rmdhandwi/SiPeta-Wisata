@@ -5,8 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthBase from '@/layouts/AuthLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { SharedData } from '@/types';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
+import { watch } from 'vue';
+import { useToast } from 'vue-toast-notification';
 
 const form = useForm({
     name: '',
@@ -22,6 +25,22 @@ const submit = () => {
         onFinish: () => form.reset('password', 'password_confirmation'),
     });
 };
+
+const page = usePage<SharedData>();
+const toast = useToast();
+
+watch(
+    () => page.props.flash?.error,
+    (message) => {
+        if (message) {
+            toast.error(message, {
+                position: 'top-right',
+                duration: 3000,
+            });
+        }
+    },
+    { immediate: true },
+);
 </script>
 
 <template>
@@ -40,7 +59,7 @@ const submit = () => {
                         autocomplete="name"
                         v-model="form.name"
                         placeholder="Nama Lengkap"
-                        class="bg-white text-black border"
+                        class="border bg-white text-black"
                     />
                     <InputError :message="form.errors.name" />
                 </div>
@@ -54,7 +73,7 @@ const submit = () => {
                         autocomplete="username"
                         v-model="form.username"
                         placeholder="Username"
-                        class="bg-white text-black border"
+                        class="border bg-white text-black"
                     />
                     <InputError :message="form.errors.username" />
                 </div>
@@ -68,7 +87,7 @@ const submit = () => {
                         autocomplete="email"
                         v-model="form.email"
                         placeholder="email@contoh.com"
-                        class="bg-white text-black border"
+                        class="border bg-white text-black"
                     />
                     <InputError :message="form.errors.email" />
                 </div>
@@ -82,7 +101,7 @@ const submit = () => {
                         autocomplete="new-password"
                         v-model="form.password"
                         placeholder="Kata Sandi"
-                        class="bg-white text-black border"
+                        class="border bg-white text-black"
                     />
                     <InputError :message="form.errors.password" />
                 </div>
@@ -96,14 +115,14 @@ const submit = () => {
                         autocomplete="new-password"
                         v-model="form.password_confirmation"
                         placeholder="Konfirmasi Password"
-                        class="bg-white text-black border"
+                        class="border bg-white text-black"
                     />
                     <InputError :message="form.errors.password_confirmation" />
                 </div>
 
                 <Button
                     type="submit"
-                    class="mt-2 w-full bg-[#1e7fce] hover:bg-[#20639a] cursor-pointer text-white transition-all"
+                    class="mt-2 w-full cursor-pointer bg-[#1e7fce] text-white transition-all hover:bg-[#20639a]"
                     :tabindex="6"
                     :disabled="form.processing"
                 >
@@ -112,11 +131,11 @@ const submit = () => {
                 </Button>
             </div>
 
-            <div class="text-center text-sm text-muted-foreground mt-4">
+            <div class="text-muted-foreground mt-4 text-center text-sm">
                 Sudah punya akun?
                 <TextLink
                     :href="route('login')"
-                    class="underline underline-offset-4 hover:underline hover:text-[#20639a] dark:hover:text-[#20639a] dark:text-gray-400 cursor-pointer transition-all"
+                    class="cursor-pointer underline underline-offset-4 transition-all hover:text-[#20639a] hover:underline dark:text-gray-400 dark:hover:text-[#20639a]"
                     :tabindex="7"
                 >
                     Masuk
@@ -125,4 +144,3 @@ const submit = () => {
         </form>
     </AuthBase>
 </template>
-

@@ -29,11 +29,23 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
 
+        $request->authenticate();
         $request->session()->regenerate();
 
-        return redirect()->route('dashboard')->with('success', 'Selamat datang, ' . Auth::user()->name);
+        $user = Auth::user();
+
+        switch ($user->role) {
+            case 1:
+                return redirect()->route('dashboard')->with('success', 'Selamat datang, ' . $user->name);
+            case 2:
+                return redirect()->route('laporan.index')->with('success', 'Selamat datang, ' . $user->name);
+            case 3:
+                return redirect()->route('investor.index')->with('success', 'Selamat datang Investor, ' . $user->name);
+            default:
+                Auth::logout();
+                return redirect()->route('login')->with('error', 'Role tidak dikenali.');
+        }
     }
 
     /**
