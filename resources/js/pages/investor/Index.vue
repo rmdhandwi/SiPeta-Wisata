@@ -1,17 +1,9 @@
 <script setup lang="ts">
-import { SharedData } from '@/types';
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Select } from 'primevue';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
-
-const page = usePage<SharedData>();
-const user = page.props.auth.user;
-
-function logout() {
-    router.post('/logout');
-}
 
 const props = defineProps<{
     lokasi: Array<{
@@ -32,6 +24,9 @@ let map: L.Map | null = null;
 let markers: L.Marker[] = [];
 
 const selectedJenis = ref('');
+const waktuSekarang = ref('');
+const lokasiDipilih = ref<(typeof props.lokasi)[0] | null>(null);
+
 const jenisUnik = computed(() => [
     { label: 'Semua', value: '' },
     ...[...new Set(props.lokasi.map((l) => l.jenis))].map((j) => ({
@@ -39,6 +34,24 @@ const jenisUnik = computed(() => [
         value: j,
     })),
 ]);
+
+const updateTime = () => {
+    const now = new Date();
+    const hari = now.toLocaleDateString('id-ID', { weekday: 'long' });
+    const tanggal = now.toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+    const waktu = now.toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+    });
+
+    waktuSekarang.value = `${hari}, ${tanggal} - ${waktu}`;
+};
+setInterval(updateTime, 1000);
 
 const iconColor = (jenis: string, isTopRank: boolean): string => {
     if (isTopRank) return 'red';
@@ -80,21 +93,10 @@ const updateMarkers = () => {
             icon: createIcon(iconColor(lokasi.jenis, isTopRank)),
         }).addTo(map!);
 
-        const popup = `
-      <div style="font-size: 14px;">
-        <strong style="font-size: 16px;">${lokasi.nama}</strong>
-        <table style="margin-top: 5px;">
-          <tr><td><b>Jenis</b></td><td>: ${lokasi.jenis}</td></tr>
-          <tr><td><b>Fasilitas</b></td><td>: ${lokasi.fasilitas || '-'}</td></tr>
-          <tr><td><b>Keamanan</b></td><td>: ${lokasi.keamanan || '-'}</td></tr>
-          <tr><td><b>Akses</b></td><td>: ${lokasi.akses_lokasi || '-'}</td></tr>
-          ${lokasi.rank !== undefined ? `<tr><td><b>Ranking</b></td><td>: ${lokasi.rank}</td></tr>` : ''}
-          ${lokasi.preferensi !== undefined ? `<tr><td><b>Preferensi</b></td><td>: ${lokasi.preferensi}</td></tr>` : ''}
-        </table>
-      </div>
-    `;
+        marker.on('click', () => {
+            lokasiDipilih.value = lokasi;
+        });
 
-        marker.bindPopup(popup);
         markers.push(marker);
     });
 };
@@ -127,30 +129,74 @@ watch(() => props.lokasi, updateMarkers);
         <!-- Navbar -->
         <nav class="flex items-center justify-between bg-white px-6 py-4 shadow">
             <div class="flex items-center gap-4">
-                <img src="image/logo_transparant.png" alt="Logo SiPeta-Wisata" class="max-h-10 w-auto" />
-                <h1 class="text-xl font-semibold text-gray-700">Potensi Lokasi Wisata</h1>
+                <img src="/image/logo_transparant.png" alt="Logo SiPeta-Wisata" class="max-h-10 w-auto" onerror="this.style.display='none'" />
+                <div>
+                    <h1 class="text-xl font-semibold text-gray-700">Peta Potensi Lokasi Wisata</h1>
+                    <p class="text-sm text-gray-500">Visualisasi lokasi berdasarkan jenis, preferensi, dan peringkat.</p>
+                </div>
             </div>
-            <div class="flex items-center gap-4">
-                <span class="text-gray-600">👤 {{ user.name }}</span>
-                <Button @click="logout" icon="pi pi-sign-out" severity="danger" size="small" label="Logout" />
+            <div class="text-right text-sm text-gray-600">
+                <div class="font-medium">⏰ {{ waktuSekarang }}</div>
             </div>
         </nav>
 
-        <!-- Main content -->
-        <main class="p-6">
-            <div class="mb-4 flex items-center gap-2">
-                <label class="font-medium">Filter Jenis Wisata:</label>
-                <Select
-                    v-model="selectedJenis"
-                    :options="jenisUnik"
-                    optionLabel="label"
-                    optionValue="value"
-                    placeholder="Pilih Jenis Wisata"
-                    class="w-64"
-                />
+        <!-- Main Grid -->
+        <main class="grid grid-cols-1 gap-4 p-6 xl:grid-cols-3">
+            <!-- Peta -->
+            <div class="space-y-4 xl:col-span-2">
+                <div class="flex items-center gap-2">
+                    <label class="font-medium" title="Pilih jenis wisata untuk menampilkan hanya kategori tertentu."> Filter Jenis Wisata: </label>
+                    <Select
+                        v-model="selectedJenis"
+                        :options="jenisUnik"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Pilih Jenis Wisata"
+                        class="w-64"
+                    />
+                    <Button icon="pi pi-arrow-left" as="a" href="/" variant="outlined" label="Kembali" severity="info" />
+                </div>
+
+                <div :id="mapId" class="h-[700px] w-full rounded shadow" />
             </div>
 
-            <div :id="mapId" class="h-[700px] w-full rounded shadow" />
+            <!-- Detail Lokasi -->
+            <div class="flex items-center justify-center xl:items-center">
+                <div v-if="lokasiDipilih" class="mx-auto w-full max-w-md rounded bg-white p-6 shadow">
+                    <h2 class="mb-2 text-center text-lg font-semibold text-blue-600">📍 Detail Lokasi Terpilih</h2>
+                    <p class="mb-1 text-center text-gray-700">
+                        <strong>{{ lokasiDipilih.nama }}</strong
+                        ><br />
+                        <span class="text-sm text-gray-500 italic">{{ lokasiDipilih.jenis }}</span>
+                    </p>
+                    <table class="mt-4 w-full text-sm text-gray-600">
+                        <tr>
+                            <td class="font-medium">Fasilitas</td>
+                            <td>: {{ lokasiDipilih.fasilitas || '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="font-medium">Keamanan</td>
+                            <td>: {{ lokasiDipilih.keamanan || '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="font-medium">Akses</td>
+                            <td>: {{ lokasiDipilih.akses_lokasi || '-' }}</td>
+                        </tr>
+                        <tr v-if="lokasiDipilih.rank !== undefined">
+                            <td class="font-medium">Ranking</td>
+                            <td>: {{ lokasiDipilih.rank }}</td>
+                        </tr>
+                        <tr v-if="lokasiDipilih.preferensi !== undefined">
+                            <td class="font-medium">Preferensi</td>
+                            <td>: {{ lokasiDipilih.preferensi.toFixed(4) }}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div v-else class="w-full text-center text-sm text-gray-500 italic">
+                    Klik salah satu marker di peta untuk melihat detail lokasi wisata.
+                </div>
+            </div>
         </main>
     </div>
 </template>

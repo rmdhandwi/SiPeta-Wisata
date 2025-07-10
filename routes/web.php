@@ -8,11 +8,8 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
-Route::get('investor', function () {
-    return Inertia::render('investor/Index');
-})->middleware(['auth', 'verified', 'role:3'])->name('investor.index');
 
-Route::middleware(['auth', 'role:3'])->group(
+Route::middleware('guest')->group(
     function () {
         Route::get('/investor', [InvestorController::class, 'index'])->name('investor.index');
     }

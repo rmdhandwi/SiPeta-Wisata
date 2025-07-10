@@ -120,7 +120,7 @@ const submit = () => {
 
             <!-- Sign up link (optional) -->
 
-            <div class="text-center text-sm text-gray-600">
+            <!-- <div class="text-center text-sm text-gray-600">
                 Belum punya akun?
                 <TextLink
                     :href="route('register')"
@@ -128,7 +128,7 @@ const submit = () => {
                     class="cursor-pointer underline underline-offset-4 transition-all hover:text-[#20639a] hover:underline dark:text-gray-400 dark:hover:text-[#20639a]"
                     >Daftar sekarang</TextLink
                 >
-            </div>
+            </div> -->
         </form>
     </AuthBase>
 </template>
