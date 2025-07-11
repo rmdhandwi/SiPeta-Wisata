@@ -61,27 +61,10 @@ const mainNavItems = computed<NavItem[]>(() => {
         case 2: // Kepala Dinas
             return [
                 {
-                    title: 'Dashboard',
-                    href: '/dashboard',
-                    icon: LayoutGrid,
-                },
-                {
                     title: 'Laporan Wisata',
                     href: '/laporan',
+                    match: ['/kepala/laporan', '/kepala/laporan/*'],
                     icon: FileBarChart,
-                },
-            ];
-        case 3: // Investor
-            return [
-                {
-                    title: 'Dashboard',
-                    href: '/dashboard',
-                    icon: LayoutGrid,
-                },
-                {
-                    title: 'Investasi Saya',
-                    href: '/investasi',
-                    icon: BookMarked,
                 },
             ];
         default:

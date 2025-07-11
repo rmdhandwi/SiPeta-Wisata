@@ -29,7 +29,7 @@ class LokasiWisataRequest extends FormRequest
                     'required',
                     'string',
                     'max:255',
-                    Rule::unique('lokasi_wisata', 'nama_lokasi_wisata')->ignore($field === 'id_lokasi_wisata', 'id_lokasi_wisata'),
+                    Rule::unique('lokasi_wisata', 'nama_lokasi_wisata')->ignore($this->id_lokasi_wisata, 'id_lokasi_wisata'),
                 ],
                 in_array($field, ['longitude', 'latitude']) => ['required', 'numeric'],
                 default => ['required', 'string'],

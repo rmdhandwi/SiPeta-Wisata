@@ -40,8 +40,8 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->route('dashboard')->with('success', 'Selamat datang, ' . $user->name);
             case 2:
                 return redirect()->route('laporan.index')->with('success', 'Selamat datang, ' . $user->name);
-            case 3:
-                return redirect()->route('investor.index')->with('success', 'Selamat datang Investor, ' . $user->name);
+            // case 3:
+            //     return redirect()->route('investor.index')->with('success', 'Selamat datang Investor, ' . $user->name);
             default:
                 Auth::logout();
                 return redirect()->route('login')->with('error', 'Role tidak dikenali.');
