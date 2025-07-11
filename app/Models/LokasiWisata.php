@@ -79,6 +79,7 @@ class LokasiWisata extends Model
                 'lw.longitude',
                 'lw.fasilitas',
                 'lw.keamanan',
+                'lw.transportasi',
                 'lw.akses_lokasi',
                 'ht.rangking as rank',
                 'ht.tipe_preferensi as preferensi'

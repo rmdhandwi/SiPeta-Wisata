@@ -28,6 +28,7 @@ const props = defineProps<{
         longitude: number;
         fasilitas: string;
         keamanan: string;
+        transportasi: string;
         akses_lokasi: string;
         rank?: number;
         preferensi?: number;
@@ -121,6 +122,7 @@ const initMap = async () => {
                     <tr><td><b>Jenis</b></td><td>: ${lokasi.jenis}</td></tr>
                     <tr><td><b>Fasilitas</b></td><td>: ${lokasi.fasilitas || '-'}</td></tr>
                     <tr><td><b>Keamanan</b></td><td>: ${lokasi.keamanan || '-'}</td></tr>
+                    <tr><td><b>Transportasi</b></td><td>: ${lokasi.transportasi || '-'}</td></tr>
                     <tr><td><b>Akses</b></td><td>: ${lokasi.akses_lokasi || '-'}</td></tr>
                 </table>
             </div>

@@ -14,6 +14,7 @@ const props = defineProps<{
         latitude: number;
         longitude: number;
         fasilitas: string;
+        transportasi: string;
         keamanan: string;
         akses_lokasi: string;
         rank?: number;
@@ -26,16 +27,16 @@ let map: L.Map | null = null;
 let markers: L.Marker[] = [];
 
 const selectedJenis = ref('');
-const jenisUnik = computed(() =>
-    [...new Set(props.lokasi.map((l) => l.jenis))].map((j) => ({
+const jenisUnik = computed(() => [
+    { label: 'Semua', value: '' },
+    ...[...new Set(props.lokasi.map((l) => l.jenis))].map((j) => ({
         label: j,
         value: j,
     })),
-);
+]);
 
 // Penentuan warna ikon
-const iconColor = (jenis: string, isTopRank: boolean): string => {
-    if (isTopRank) return 'red';
+const iconColor = (jenis: string): string => {
     switch (jenis.toLowerCase()) {
         case 'wisata alam':
             return 'green';
@@ -73,21 +74,21 @@ const updateMarkers = () => {
         const lng = Number(lokasi.longitude);
         if (isNaN(lat) || isNaN(lng)) return;
 
-        const isTopRank = lokasi.rank === 1;
         const marker = L.marker([lat, lng], {
-            icon: createIcon(iconColor(lokasi.jenis, isTopRank)),
+            icon: createIcon(iconColor(lokasi.jenis)),
         }).addTo(map!);
 
         const popup = `
         <div style="font-size: 14px;">
             <strong style="font-size: 16px;">${lokasi.nama}</strong>
             <table style="margin-top: 5px;">
+            ${lokasi.rank !== undefined ? `<tr><td><b>Ranking</b></td><td>: ${lokasi.rank}</td></tr>` : ''}
+            ${lokasi.preferensi !== undefined ? `<tr><td><b>Preferensi</b></td><td>: ${lokasi.preferensi}</td></tr>` : ''}
                 <tr><td><b>Jenis</b></td><td>: ${lokasi.jenis}</td></tr>
                 <tr><td><b>Fasilitas</b></td><td>: ${lokasi.fasilitas || '-'}</td></tr>
                 <tr><td><b>Keamanan</b></td><td>: ${lokasi.keamanan || '-'}</td></tr>
                 <tr><td><b>Akses</b></td><td>: ${lokasi.akses_lokasi || '-'}</td></tr>
-                ${lokasi.rank !== undefined ? `<tr><td><b>Ranking</b></td><td>: ${lokasi.rank}</td></tr>` : ''}
-                ${lokasi.preferensi !== undefined ? `<tr><td><b>Preferensi</b></td><td>: ${lokasi.preferensi}</td></tr>` : ''}
+                <tr><td><b>Transportasi</b></td><td>: ${lokasi.transportasi || '-'}</td></tr>
             </table>
         </div>
     `;

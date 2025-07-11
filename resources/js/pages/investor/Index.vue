@@ -12,6 +12,7 @@ const props = defineProps<{
         latitude: number;
         longitude: number;
         fasilitas: string;
+        transportasi: string;
         keamanan: string;
         akses_lokasi: string;
         rank?: number;
@@ -53,8 +54,7 @@ const updateTime = () => {
 };
 setInterval(updateTime, 1000);
 
-const iconColor = (jenis: string, isTopRank: boolean): string => {
-    if (isTopRank) return 'red';
+const iconColor = (jenis: string): string => {
     switch (jenis.toLowerCase()) {
         case 'wisata alam':
             return 'green';
@@ -83,9 +83,7 @@ const updateMarkers = () => {
     markers.forEach((m) => m.remove());
     markers = [];
 
-    const lokasiFiltered = props.lokasi.filter(
-        (l) => (!selectedJenis.value || l.jenis === selectedJenis.value),
-    );
+    const lokasiFiltered = props.lokasi.filter((l) => !selectedJenis.value || l.jenis === selectedJenis.value);
 
     lokasiFiltered.forEach((lokasi) => {
         const lat = Number(lokasi.latitude);
@@ -93,7 +91,7 @@ const updateMarkers = () => {
         if (isNaN(lat) || isNaN(lng)) return;
         const isTopRank = lokasi.rank === 1;
         const marker = L.marker([lokasi.latitude, lokasi.longitude], {
-            icon: createIcon(iconColor(lokasi.jenis, isTopRank)),
+            icon: createIcon(iconColor(lokasi.jenis)),
         }).addTo(map!);
 
         marker.on('click', () => {
@@ -182,16 +180,12 @@ watch(() => props.lokasi, updateMarkers);
                             <td>: {{ lokasiDipilih.keamanan || '-' }}</td>
                         </tr>
                         <tr>
+                            <td class="font-medium">Transportasi</td>
+                            <td>: {{ lokasiDipilih.transportasi || '-' }}</td>
+                        </tr>
+                        <tr>
                             <td class="font-medium">Akses</td>
                             <td>: {{ lokasiDipilih.akses_lokasi || '-' }}</td>
-                        </tr>
-                        <tr v-if="lokasiDipilih.rank !== undefined">
-                            <td class="font-medium">Ranking</td>
-                            <td>: {{ lokasiDipilih.rank }}</td>
-                        </tr>
-                        <tr v-if="lokasiDipilih.preferensi !== undefined">
-                            <td class="font-medium">Preferensi</td>
-                            <td>: {{ lokasiDipilih.preferensi.toFixed(4) }}</td>
                         </tr>
                     </table>
                 </div>
