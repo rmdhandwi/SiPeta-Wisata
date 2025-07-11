@@ -3,13 +3,26 @@
 namespace App\Http\Controllers\kepala;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\LokasiWisata;
 use Inertia\Inertia;
 
 class KepalaController extends Controller
 {
     public function index()
     {
-        return Inertia::render('kepala/Index');
+        $lokasi = LokasiWisata::dataPeta();
+
+        return Inertia::render('kepala/Index', [
+            'lokasi' => $lokasi,
+        ]);
+    }
+
+    public function print()
+    {
+        $lokasi = LokasiWisata::dataPeta();
+
+        return Inertia::render('kepala/Print', [
+            'lokasi' => $lokasi,
+        ]);
     }
 }

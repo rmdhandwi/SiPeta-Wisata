@@ -66,30 +66,31 @@ const updateMarkers = () => {
     markers.forEach((m) => m.remove());
     markers = [];
 
-    const lokasiFiltered = props.lokasi.filter(
-        (l) => (!selectedJenis.value || l.jenis === selectedJenis.value) && typeof l.latitude === 'number' && typeof l.longitude === 'number',
-    );
+    const lokasiFiltered = props.lokasi.filter((l) => !selectedJenis.value || l.jenis === selectedJenis.value);
 
     lokasiFiltered.forEach((lokasi) => {
+        const lat = Number(lokasi.latitude);
+        const lng = Number(lokasi.longitude);
+        if (isNaN(lat) || isNaN(lng)) return;
+
         const isTopRank = lokasi.rank === 1;
-        const marker = L.marker([lokasi.latitude, lokasi.longitude], {
+        const marker = L.marker([lat, lng], {
             icon: createIcon(iconColor(lokasi.jenis, isTopRank)),
         }).addTo(map!);
 
         const popup = `
-  <div style="font-size: 14px;">
-    <strong style="font-size: 16px;">${lokasi.nama}</strong>
-    <table style="margin-top: 5px;">
-      <tr><td><b>Jenis</b></td><td>: ${lokasi.jenis}</td></tr>
-      <tr><td><b>Fasilitas</b></td><td>: ${lokasi.fasilitas || '-'}</td></tr>
-      <tr><td><b>Keamanan</b></td><td>: ${lokasi.keamanan || '-'}</td></tr>
-      <tr><td><b>Akses</b></td><td>: ${lokasi.akses_lokasi || '-'}</td></tr>
-      ${lokasi.rank !== undefined ? `<tr><td><b>Ranking</b></td><td>: ${lokasi.rank}</td></tr>` : ''}
-      ${lokasi.preferensi !== undefined ? `<tr><td><b>Preferensi</b></td><td>: ${lokasi.preferensi}</td></tr>` : ''}
-    </table>
-  </div>
-`;
-
+        <div style="font-size: 14px;">
+            <strong style="font-size: 16px;">${lokasi.nama}</strong>
+            <table style="margin-top: 5px;">
+                <tr><td><b>Jenis</b></td><td>: ${lokasi.jenis}</td></tr>
+                <tr><td><b>Fasilitas</b></td><td>: ${lokasi.fasilitas || '-'}</td></tr>
+                <tr><td><b>Keamanan</b></td><td>: ${lokasi.keamanan || '-'}</td></tr>
+                <tr><td><b>Akses</b></td><td>: ${lokasi.akses_lokasi || '-'}</td></tr>
+                ${lokasi.rank !== undefined ? `<tr><td><b>Ranking</b></td><td>: ${lokasi.rank}</td></tr>` : ''}
+                ${lokasi.preferensi !== undefined ? `<tr><td><b>Preferensi</b></td><td>: ${lokasi.preferensi}</td></tr>` : ''}
+            </table>
+        </div>
+    `;
         marker.bindPopup(popup);
         markers.push(marker);
     });

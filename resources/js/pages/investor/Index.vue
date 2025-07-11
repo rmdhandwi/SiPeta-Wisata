@@ -84,10 +84,13 @@ const updateMarkers = () => {
     markers = [];
 
     const lokasiFiltered = props.lokasi.filter(
-        (l) => (!selectedJenis.value || l.jenis === selectedJenis.value) && typeof l.latitude === 'number' && typeof l.longitude === 'number',
+        (l) => (!selectedJenis.value || l.jenis === selectedJenis.value),
     );
 
     lokasiFiltered.forEach((lokasi) => {
+        const lat = Number(lokasi.latitude);
+        const lng = Number(lokasi.longitude);
+        if (isNaN(lat) || isNaN(lng)) return;
         const isTopRank = lokasi.rank === 1;
         const marker = L.marker([lokasi.latitude, lokasi.longitude], {
             icon: createIcon(iconColor(lokasi.jenis, isTopRank)),

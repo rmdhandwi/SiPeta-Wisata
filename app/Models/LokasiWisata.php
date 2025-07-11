@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class LokasiWisata extends Model
@@ -64,6 +65,27 @@ class LokasiWisata extends Model
                 ], $data);
             });
     }
+
+    // LokasiWisata.php (Model)
+    public static function dataPeta()
+    {
+        return DB::table('lokasi_wisata as lw')
+            ->join('jenis_wisata as jw', 'lw.jenis_wisata_id', '=', 'jw.id_jenis_wisata')
+            ->join('hasil_topsis as ht', 'lw.id_lokasi_wisata', '=', 'ht.lokasi_wisata_id')
+            ->select(
+                'lw.nama_lokasi_wisata as nama',
+                'jw.nama_jenis_wisata as jenis',
+                'lw.latitude',
+                'lw.longitude',
+                'lw.fasilitas',
+                'lw.keamanan',
+                'lw.akses_lokasi',
+                'ht.rangking as rank',
+                'ht.tipe_preferensi as preferensi'
+            )
+            ->get();
+    }
+
 
 
     // Opsional jika ada relasi

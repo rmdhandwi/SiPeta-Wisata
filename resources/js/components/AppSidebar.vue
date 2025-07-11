@@ -63,7 +63,7 @@ const mainNavItems = computed<NavItem[]>(() => {
                 {
                     title: 'Laporan Wisata',
                     href: '/laporan',
-                    match: ['/kepala/laporan', '/kepala/laporan/*'],
+                    match: ['/laporan', '/laporan/*'],
                     icon: FileBarChart,
                 },
             ];
