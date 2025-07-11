@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jul 09, 2025 at 10:55 PM
+-- Generation Time: Jul 11, 2025 at 04:53 PM
 -- Server version: 8.0.30
 -- PHP Version: 8.3.13
 
@@ -32,6 +32,14 @@ CREATE TABLE `cache` (
   `value` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `expiration` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `cache`
+--
+
+INSERT INTO `cache` (`key`, `value`, `expiration`) VALUES
+('sipeta_cache_invertor2|127.0.0.1', 'i:1;', 1752125463),
+('sipeta_cache_invertor2|127.0.0.1:timer', 'i:1752125463;', 1752125463);
 
 -- --------------------------------------------------------
 
@@ -204,8 +212,8 @@ CREATE TABLE `lokasi_wisata` (
   `keamanan` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `transportasi` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `akses_lokasi` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `longitude` float DEFAULT NULL,
-  `latitude` float DEFAULT NULL
+  `longitude` decimal(10,6) DEFAULT NULL,
+  `latitude` decimal(10,6) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -213,34 +221,34 @@ CREATE TABLE `lokasi_wisata` (
 --
 
 INSERT INTO `lokasi_wisata` (`id_lokasi_wisata`, `jenis_wisata_id`, `nama_lokasi_wisata`, `fasilitas`, `keamanan`, `transportasi`, `akses_lokasi`, `longitude`, `latitude`) VALUES
-(1, 1, 'Air Terjun Drakisi', 'Air terjun, jalur hiking', 'Perlu pendamping', 'Ojek, Jalan kaki', 'Jalur hutan alami', 141, -200),
-(2, 1, 'Air Terjun Demta', 'Air terjun alami', 'Cukup Aman', 'Mobil, Jalan kaki', 'Akses terbatas, pedalaman', 140.678, -2.59978),
-(3, 1, 'Gua Mamda', 'Goa alami, Spot eksplorasi', 'Aman', 'Mobil, Jalan kaki', 'Akses hutan', 141, -3),
-(4, 1, 'Habitat Burung Cendrawasih', 'Observasi burung, Alam liar', 'Perlu pemandu', 'Mobil, Jalan kaki', 'Hutan tropis', NULL, NULL),
-(5, 1, 'Telaga Aloska', 'Danau kecil, Spot tenang', 'Aman', 'Motor', 'Dekat kampung', NULL, NULL),
-(6, 1, 'Mata Air Garam', 'Mata air unik, Alami', 'Aman', 'Mobil', 'Area pegunungan', NULL, NULL),
-(7, 1, 'Gunung Kandega', 'Pendakian, Panorama', 'Perlu hati-hati', 'Mobil, Jalan kaki', 'Jalur menanjak', 141, -3),
-(8, 1, 'Spot Sabubu', 'Pemandangan bukit dan danau', 'Aman', 'Mobil, Ojek', 'Dekat pemukiman', NULL, NULL),
-(9, 2, 'Fosil Sagu', 'Situs arkeologi, edukatif', 'Aman', 'Mobil', 'Jalur datar', NULL, NULL),
-(10, 2, 'Fosil Manusia Raksasa', 'Situs prasejarah, Penelitian', 'Aman', 'Mobil', 'Pedalaman', NULL, NULL),
-(11, 2, 'Tugu Monumen PD II', 'Monumen sejarah, Peringatan', 'Aman', 'Mobil, Ojek', 'Dekat jalan utama', NULL, NULL),
-(12, 2, 'Tugu Yawa Datum', 'Tugu budaya dan sejarah', 'Aman', 'Mobil', 'Dekat pemukiman', NULL, NULL),
-(13, 2, 'Tugu Perubahan Peradaban', 'Monumen budaya', 'Aman', 'Mobil', 'Pusat kota', NULL, NULL),
-(14, 2, 'Ukiran Kayu dan Kerang', 'Galeri seni tradisional', 'Aman', 'Mobil, Jalan kaki', 'Dekat kampung wisata', NULL, NULL),
-(15, 2, 'Pusat Penyebaran Harta Budaya', 'Museum lokal', 'Aman', 'Mobil, Ojek', 'Dekat pusat desa', NULL, NULL),
-(16, 2, 'Yono Waw', 'Situs budaya atau ritual', 'Perlu pendamping', 'Motor, Jalan kaki', 'Area terpencil', NULL, NULL),
-(17, 3, 'Pantai Wesapan', 'Pasir putih, Spot santai', 'Aman', 'Mobil, Motor', 'Akses jalan kampung', NULL, NULL),
-(18, 3, 'Pantai Yaugapsa', 'Bermain air, Spot foto', 'Aman', 'Motor, Ojek', 'Dekat permukiman', NULL, NULL),
-(19, 3, 'Pantai Tarfia', 'Snorkeling, Bersih', 'Aman', 'Mobil', 'Pinggir kampung', NULL, NULL),
-(20, 3, 'Pantai Muaif', 'Spot renang, Warung', 'Aman', 'Mobil, Ojek', 'Dekat akses utama', NULL, NULL),
-(21, 3, 'Pantai Snamai', 'Pantai alami', 'Aman', 'Mobil', 'Jalur tanah', NULL, NULL),
-(22, 3, 'Pantai Meukisi', 'Pasir halus, Sunyi', 'Aman', 'Ojek', 'Tepi hutan', NULL, NULL),
-(23, 3, 'Pantai Buseryo', 'Bermain pasir, Sunset', 'Aman', 'Mobil, Motor', 'Akses baik', NULL, NULL),
-(24, 3, 'Pantai Endokisi', 'Spot santai, Warung', 'Aman', 'Motor, Ojek', 'Dekat desa', NULL, NULL),
-(25, 3, 'Pantai Bukisi', 'Pasir putih, Ombak kecil', 'Aman', 'Mobil', 'Jalur pinggir danau', NULL, NULL),
-(26, 3, 'Pantai Sinokisi', 'Spot foto, Santai', 'Aman', 'Ojek, Jalan kaki', 'Pinggir pantai tersembunyi', NULL, NULL),
-(27, 3, 'Pantai Drakisi', 'Pantai alami, Sepi', 'Aman', 'Motor', 'Dekat air terjun', NULL, NULL),
-(28, 2, 'Lapter tanjung tanah merah', 'Tempat sampah', 'Tidak aman', 'Motor', 'Akses jalan sempit', 141, -2);
+(1, 1, 'Air Terjun Drakisi', 'Air terjun, jalur hiking', 'Perlu pendamping', 'Ojek, Jalan kaki', 'Jalur hutan alami', 140.197390, -2.394968),
+(2, 1, 'Air Terjun Demta', 'Air terjun alami', 'Cukup Aman', 'Mobil, Jalan kaki', 'Akses terbatas, pedalaman', 140.145740, -2.365130),
+(3, 1, 'Gua Mamda', 'Goa alami, Spot eksplorasi', 'Aman', 'Mobil, Jalan kaki', 'Akses hutan', 140.334150, -2.581630),
+(4, 1, 'Habitat Burung Cendrawasih', 'Observasi burung, Alam liar', 'Perlu pemandu', 'Mobil, Jalan kaki', 'Hutan tropis', 140.098698, -2.559438),
+(5, 1, 'Telaga Aloska', 'Danau kecil, Spot tenang', 'Aman', 'Motor', 'Dekat kampung', 140.407681, -3.374742),
+(6, 1, 'Mata Air Garam', 'Mata air unik, Alami', 'Aman', 'Mobil', 'Area pegunungan', 140.406108, -3.378945),
+(7, 1, 'Gunung Kandega', 'Pendakian, Panorama', 'Perlu hati-hati', 'Mobil, Jalan kaki', 'Jalur menanjak', 140.034399, -3.609303),
+(8, 1, 'Spot Sabubu', 'Pemandangan bukit dan danau', 'Aman', 'Mobil, Ojek', 'Dekat pemukiman', 140.371107, -2.397835),
+(9, 2, 'Fosil Sagu', 'Situs arkeologi, edukatif', 'Aman', 'Mobil', 'Jalur datar', 140.215218, -2.636799),
+(10, 2, 'Fosil Manusia Raksasa', 'Situs prasejarah, Penelitian', 'Aman', 'Mobil', 'Pedalaman', 140.145131, -2.360878),
+(11, 2, 'Tugu Monumen PD II', 'Monumen sejarah, Peringatan', 'Aman', 'Mobil, Ojek', 'Dekat jalan utama', 140.167012, -2.596158),
+(12, 2, 'Tugu Yawa Datum', 'Tugu budaya dan sejarah', 'Aman', 'Mobil', 'Dekat pemukiman', 140.166562, -2.596219),
+(13, 2, 'Tugu Perubahan Peradaban', 'Monumen budaya', 'Aman', 'Mobil', 'Pusat kota', 140.195024, -2.608886),
+(14, 2, 'Ukiran Kayu dan Kerang', 'Galeri seni tradisional', 'Aman', 'Mobil, Jalan kaki', 'Dekat kampung wisata', 140.146605, -2.343447),
+(15, 2, 'Pusat Penyebaran Harta Budaya', 'Museum lokal', 'Aman', 'Mobil, Ojek', 'Dekat pusat desa', 140.248442, -2.663452),
+(16, 2, 'Yono Waw', 'Situs budaya atau ritual', 'Perlu pendamping', 'Motor, Jalan kaki', 'Area terpencil', 140.104438, -2.638524),
+(17, 3, 'Pantai Wesapan', 'Pasir putih, Spot santai', 'Aman', 'Mobil, Motor', 'Akses jalan kampung', 140.181874, -2.378312),
+(18, 3, 'Pantai Yaugapsa', 'Bermain air, Spot foto', 'Aman', 'Motor, Ojek', 'Dekat permukiman', 140.151552, -2.323792),
+(19, 3, 'Pantai Tarfia', 'Snorkeling, Bersih', 'Aman', 'Mobil', 'Pinggir kampung', 140.111148, -2.328523),
+(20, 3, 'Pantai Muaif', 'Spot renang, Warung', 'Aman', 'Mobil, Ojek', 'Dekat akses utama', 140.034366, -2.359537),
+(21, 3, 'Pantai Snamai', 'Pantai alami', 'Aman', 'Mobil', 'Jalur tanah', 140.317907, -2.448372),
+(22, 3, 'Pantai Meukisi', 'Pasir halus, Sunyi', 'Aman', 'Ojek', 'Tepi hutan', 140.244904, -2.404998),
+(23, 3, 'Pantai Buseryo', 'Bermain pasir, Sunset', 'Aman', 'Mobil, Motor', 'Akses baik', 140.327884, -2.450828),
+(24, 3, 'Pantai Endokisi', 'Spot santai, Warung', 'Aman', 'Motor, Ojek', 'Dekat desa', 140.293802, -2.438534),
+(25, 3, 'Pantai Bukisi', 'Pasir putih, Ombak kecil', 'Aman', 'Mobil', 'Jalur pinggir danau', 140.223399, -2.412721),
+(26, 3, 'Pantai Sinokisi', 'Spot foto, Santai', 'Aman', 'Ojek, Jalan kaki', 'Pinggir pantai tersembunyi', 140.292701, -2.429033),
+(27, 3, 'Pantai Drakisi', 'Pantai alami, Sepi', 'Aman', 'Motor', 'Dekat air terjun', 140.196320, -2.390571),
+(28, 2, 'Lapter tanjung tanah merah', 'Tempat sampah', 'Tidak aman', 'Motor', 'Akses jalan sempit', 140.348072, -2.400971);
 
 -- --------------------------------------------------------
 
@@ -461,7 +469,8 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('SfQoPLGFwUhzXD4ruJ10uogpCyCgp5xSP9eoSi9c', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiU2RZSVpjVlNDNWhNbXV0QXprRXB0Y1V6REpwa2xUWVBhcTc3MTlSbSI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czozNDoiaHR0cDovLzEyNy4wLjAuMTo4MDAwL2FkbWluL3RvcHNpcyI7fXM6OToiX3ByZXZpb3VzIjthOjE6e3M6MzoidXJsIjtzOjM2OiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYWRtaW4vcGVtZXRhYW4iO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxO30=', 1752101466);
+('aglTJr5sdzjh4aw58mee4gMGklxZFh2llbhKdpPn', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiUzlXSlVqZ1dIcThlRlFUSmFyZnRkaFJmcjlObE1WbVY0a2l3eVBaQyI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czozNjoiaHR0cDovLzEyNy4wLjAuMTo4MDAwL2FkbWluL3BlbWV0YWFuIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mjc6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9sb2dpbiI7fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjE7fQ==', 1752246125),
+('l7iboFi8edQVlX338l3aFStLPklrmZfzmmIAehN0', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', 'YToyOntzOjY6Il90b2tlbiI7czo0MDoibGI0eUdDSHdPUEl0YnFJNnljOHFQREh3M0k5QWF5OFk5ZTVxNjlNNyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJuZXciO2E6MDp7fXM6Mzoib2xkIjthOjA6e319fQ==', 1752252597);
 
 -- --------------------------------------------------------
 
@@ -523,7 +532,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `username`, `email`, `email_verified_at`, `password`, `role`, `remember_token`, `created_at`, `updated_at`) VALUES
-(1, 'Nama Baru', 'admin123', 'rizkiproject0912@gmail.com', NULL, '$2y$12$swnYRp8bQdh2zufYB1V1S.sCczlldEDdVKpfAgyrwT2E7CniaIQVa', 1, 'G67ARZjAIegFOH0yyzYvZ69zuWjj9bCgpxYvcLhBwd531sXjAzbum1N1ZP55', '2025-06-03 16:27:04', '2025-06-05 07:24:13');
+(1, 'Nama Baru', 'admin123', 'admin@gmail.com', NULL, '$2y$12$swnYRp8bQdh2zufYB1V1S.sCczlldEDdVKpfAgyrwT2E7CniaIQVa', 1, 'HC1o172wXUpI4q1F1BXPaXJaCZOv3HTWDsi0tcS2ZbSQpHAxVoP1df294kj9', '2025-06-03 16:27:04', '2025-06-05 07:24:13'),
+(2, 'Kepala Dinas Kewisataan', 'kepala', 'kepaladinas@gmail.com', NULL, '$2y$12$6UYsFoiAdtvy3COOd5c8XOxEstakHEXawYKO.cjbqBMhYMZ5bAVf.', 2, NULL, NULL, '2025-07-11 05:17:27');
 
 --
 -- Indexes for dumped tables
@@ -692,7 +702,7 @@ ALTER TABLE `subkriteria`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Constraints for dumped tables
