@@ -21,7 +21,7 @@ Route::middleware('guest')->group(
 Route::middleware(['auth', 'verified', 'role:2'])->group(
     function () {
         Route::get('/laporan', [KepalaController::class, 'index'])->name('laporan.index');
-        Route::get('/laporan/cetak', [KepalaController::class, 'print'])->name('laporan.cetak');
+        Route::post('/laporan/cetak', [KepalaController::class, 'print'])->name('laporan.cetak');
     }
 );
 

@@ -14,26 +14,18 @@ use Inertia\Inertia;
 
 class NilaiAlternatifController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index()
     {
         return Inertia::render('admin/Alternatif/Index');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return Inertia::render('admin/Alternatif/Form');
     }
 
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(AlternatifRequest $request): RedirectResponse
     {
         try {
@@ -202,6 +194,4 @@ class NilaiAlternatifController extends Controller
             return redirect()->back()->with('error', 'Terjadi kesalahan saat menghapus data: ' . $e->getMessage());
         }
     }
-
-    
 }

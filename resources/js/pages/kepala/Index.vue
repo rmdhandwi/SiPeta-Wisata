@@ -1,24 +1,22 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { SharedData, type BreadcrumbItem } from '@/types';
-import { Head, usePage } from '@inertiajs/vue3';
+import { SharedData } from '@/types';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { computed, nextTick, onMounted, watch } from 'vue';
+import { Select } from 'primevue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useToast } from 'vue-toast-notification';
+
+const breadcrumbItems = [
+    {
+        title: 'Laporan Potensi Wisata',
+        href: '/laporan',
+    },
+];
 
 const page = usePage<SharedData>();
 const toast = useToast();
-
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Laporan Wisata', href: 'laporan' }];
-
-watch(
-    () => page.props.flash.success,
-    (msg) => {
-        if (msg) toast.success(msg, { position: 'top-right', duration: 3000 });
-    },
-    { immediate: true },
-);
 
 const props = defineProps<{
     lokasi: Array<{
@@ -35,14 +33,30 @@ const props = defineProps<{
     }>;
 }>();
 
+watch(
+    () => page.props.flash.success,
+    (msg) => {
+        if (msg) toast.success(msg, { position: 'top-right', duration: 3000 });
+    },
+    { immediate: true },
+);
+
 const mapId = 'printable-map';
 let map: L.Map | null = null;
 let markers: L.Marker[] = [];
 let markerMap = new Map<string, L.Marker>();
 
-const sortedLokasi = computed(() => [...props.lokasi].filter((l) => l.rank !== undefined).sort((a, b) => (a.rank || 999) - (b.rank || 999)));
+// Dropdown Filter
+const jenisWisata = [...new Set(props.lokasi.map((l) => l.jenis))];
+const selectedJenis = ref<string | null>(null);
 
-// Warna berdasarkan jenis
+const filteredLokasi = computed(() => {
+    return props.lokasi
+        .filter((l) => l.rank !== undefined)
+        .filter((l) => !selectedJenis.value || l.jenis === selectedJenis.value)
+        .sort((a, b) => (a.rank || 999) - (b.rank || 999));
+});
+
 const getMarkerColor = (jenis: string): string => {
     switch (jenis.toLowerCase()) {
         case 'wisata alam':
@@ -56,7 +70,6 @@ const getMarkerColor = (jenis: string): string => {
     }
 };
 
-// Hanya angka ranking berwarna
 const createCustomIcon = (rank: number, jenis: string): L.DivIcon => {
     const color = getMarkerColor(jenis);
     return L.divIcon({
@@ -97,13 +110,13 @@ const initMap = async () => {
     markers.forEach((m) => m.remove());
     markers = [];
 
-    sortedLokasi.value.forEach((lokasi, index) => {
+    filteredLokasi.value.forEach((lokasi, index) => {
         let lat = Number(lokasi.latitude);
         let lng = Number(lokasi.longitude);
         if (isNaN(lat) || isNaN(lng)) return;
 
         for (let j = 0; j < index; j++) {
-            const prev = sortedLokasi.value[j];
+            const prev = filteredLokasi.value[j];
             if (Math.abs(Number(prev.latitude) - lat) < 0.0002 && Math.abs(Number(prev.longitude) - lng) < 0.0002) {
                 lat += 0.0002 * (index + 1);
                 lng += 0.0002 * (index + 1);
@@ -133,28 +146,29 @@ const initMap = async () => {
     });
 };
 
-const focusToLocation = (lat: number, lng: number, nama: string) => {
-    if (map) {
-        map.setView([lat, lng], 18, { animate: true });
-        const marker = markerMap.get(nama);
-        if (marker) marker.openPopup();
-    }
-};
+const form = useForm({ jenis: selectedJenis.value });
+const print = () => form.post(route('laporan.cetak'));
+
+watch(selectedJenis, (val) => {
+    form.jenis = val;
+});
 
 onMounted(() => {
+    initMap();
+});
+watch(selectedJenis, () => {
     initMap();
 });
 </script>
 
 <template>
     <Head title="Laporan Lokasi Wisata" />
-
-    <AppLayout :breadcrumbs="breadcrumbs">
+    <AppLayout :breadcrumbs="breadcrumbItems">
         <div class="flex flex-col gap-4 p-4">
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <!-- Tombol Print Mengambang -->
+                <!-- Tombol Print -->
                 <div class="fixed right-4 bottom-4 z-50 opacity-50 transition-all hover:opacity-100">
-                    <Button as="a" :href="route('laporan.cetak')" severity="info" icon="pi pi-print" label="Print" />
+                    <Button @click="print()" severity="info" icon="pi pi-print" label="Print" />
                 </div>
 
                 <!-- PETA -->
@@ -164,9 +178,8 @@ onMounted(() => {
 
                 <!-- DAFTAR -->
                 <div class="overflow-auto rounded bg-white p-4 shadow">
-                    <!-- Header -->
                     <div class="mb-6 border-b pb-4 text-center">
-                        <img src="image/logo_transparant.png" alt="Logo" class="mx-auto mb-2 h-auto w-20" />
+                        <img src="/image/logo_transparant.png" alt="Logo" class="mx-auto mb-2 h-auto w-20" />
                         <h1 class="text-xl font-bold uppercase">Pemerintah Kabupaten Jayapura</h1>
                         <h2 class="text-lg font-semibold">Dinas Pariwisata dan Ekonomi Kreatif</h2>
                         <p class="mt-1 text-sm">Penyusunan Rencana Induk Pengembangan Pariwisata Daerah (RIPPDA)</p>
@@ -174,7 +187,17 @@ onMounted(() => {
                         <h3 class="mt-2 font-bold underline">Peta Sebaran Daya Tarik Wisata</h3>
                     </div>
 
-                    <h2 class="mb-4 text-center text-xl font-bold">Daftar Lokasi Berdasarkan Ranking</h2>
+                    <!-- Filter Dropdown -->
+                    <div class="mb-4">
+                        <Select
+                            v-model="selectedJenis"
+                            :options="jenisWisata"
+                            optionLabel=""
+                            placeholder="Pilih Jenis Wisata"
+                            class="w-full"
+                            showClear
+                        />
+                    </div>
 
                     <!-- Keterangan Warna -->
                     <div class="mb-4 flex flex-wrap justify-center gap-4 text-[13px]">
@@ -192,16 +215,19 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <!-- Baris per 10 item -->
-                    <div class="space-y-3 text-[13px]">
-                        <ul class="columns-2 text-sm md:columns-3">
-                            <li v-for="lokasi in props.lokasi.sort((a, b) => (a.rank || 999) - (b.rank || 999))" :key="lokasi.nama" class="mb-1">
-                                {{ lokasi.rank }}. {{ lokasi.nama }}
-                            </li>
-                        </ul>
-                    </div>
+                    <h2 class="mb-4 text-center text-xl font-bold">Daftar Lokasi Berdasarkan Ranking</h2>
+
+                    <ul class="columns-2 text-sm md:columns-3">
+                        <li v-for="lokasi in filteredLokasi" :key="lokasi.nama" class="mb-1">{{ lokasi.rank }}. {{ lokasi.nama }}</li>
+                    </ul>
                 </div>
             </div>
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+#map {
+    height: 500px;
+}
+</style>

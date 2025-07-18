@@ -12,14 +12,14 @@ use Inertia\Response;
 
 class JenisWisataController extends Controller
 {
-    
+    // memanggil tampilan jenis wisata
     public function index()
     {
         return Inertia::render('admin/JenisWisata/Index');
     }
 
 
-    
+    // memanggil tampilan tambah data jenis wisata
     public function create(): Response
     {
         return Inertia::render('admin/JenisWisata/Form');

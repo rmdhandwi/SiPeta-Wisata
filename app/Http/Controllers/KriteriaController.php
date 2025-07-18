@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\admin\KriteriaRequest;
 use App\Models\Kriteria;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -92,7 +93,7 @@ class KriteriaController extends Controller
 
             return redirect()->route('admin.kriteria.index')
                 ->with('success', 'Data kriteria berhasil dihapus.');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             return redirect()->route('admin.kriteria.index')
                 ->with('error', 'Data kriteria tidak ditemukan.');
         } catch (\Exception $e) {
