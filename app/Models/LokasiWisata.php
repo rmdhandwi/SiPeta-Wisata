@@ -116,4 +116,14 @@ class LokasiWisata extends Model
     {
         return $this->belongsTo(JenisWisata::class, 'jenis_wisata_id', 'id_jenis_wisata');
     }
+
+    public function nilaiAlternatif()
+    {
+        return $this->hasMany(NilaiAlternatif::class, 'lokasi_wisata_id');
+    }
+
+    public function hasilTopsis()
+    {
+        return $this->hasOne(HasilTopsis::class, 'lokasi_wisata_id');
+    }
 }

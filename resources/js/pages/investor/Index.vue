@@ -103,7 +103,6 @@ const createIcon = (rank: number, color: string): L.DivIcon => {
     });
 };
 
-
 const updateMarkers = () => {
     if (!map) return;
 
@@ -133,7 +132,6 @@ const updateMarkers = () => {
         markers.push(marker);
     });
 };
-
 
 const initMap = async () => {
     await nextTick();

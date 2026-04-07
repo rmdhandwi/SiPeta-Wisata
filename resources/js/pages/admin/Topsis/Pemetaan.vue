@@ -94,9 +94,7 @@ const updateMarkers = () => {
     markers.forEach((m) => m.remove());
     markers = [];
 
-    const lokasiFiltered = props.lokasi.filter(
-        (l) => !selectedJenis.value || l.jenis === selectedJenis.value
-    );
+    const lokasiFiltered = props.lokasi.filter((l) => !selectedJenis.value || l.jenis === selectedJenis.value);
 
     lokasiFiltered.forEach((lokasi) => {
         const lat = Number(lokasi.latitude);

@@ -20,7 +20,7 @@ class HasilTopsisController extends Controller
         // helper format 3 desimal (HANYA UNTUK OUTPUT)
         function f3($val)
         {
-            return number_format($val, 3, '.', '');
+            return round($val, 3);
         }
 
         $kriteriaList = Kriteria::select('id_kriteria', 'nama_kriteria', 'bobot_kriteria', 'tipe_kriteria')
@@ -278,9 +278,9 @@ class HasilTopsisController extends Controller
         $data = $hasil->map(function ($item) {
             return [
                 'alternatif'       => $item->lokasiWisata->nama_lokasi_wisata ?? 'Tidak diketahui',
-                'jarak_positif'    => round($item->jarak_positif, 3),
-                'jarak_negatif'    => round($item->jarak_negative, 3),
-                'preferensi'       => round($item->tipe_preferensi, 3),
+                'jarak_positif'    => $item->jarak_positif,
+                'jarak_negatif'    => $item->jarak_negative,
+                'preferensi'       => $item->tipe_preferensi,
                 'rangking'         => $item->rangking,
             ];
         });
@@ -295,8 +295,48 @@ class HasilTopsisController extends Controller
      */
     public function pemetaan()
     {
+        $data = LokasiWisata::with([
+            'nilaiAlternatif.subkriteria'
+        ])->get();
 
-        $lokasi = LokasiWisata::dataPeta();
+        $lokasi = $data->map(function ($lokasi) {
+
+            // ambil semua subkriteria per lokasi
+            $subs = $lokasi->nilaiAlternatif->pluck('subkriteria');
+
+            return [
+                'nama' => $lokasi->nama_lokasi_wisata,
+                'jenis' => $lokasi->jenisWisata?->nama_jenis_wisata,
+
+                'latitude' => $lokasi->latitude,
+                'longitude' => $lokasi->longitude,
+
+                // 🔥 ambil nama bukan angka
+                'fasilitas' => $subs
+                    ->where('kriteria.nama_kriteria', 'Fasilitas')
+                    ->pluck('nama_subkriteria')
+                    ->implode(', '),
+
+                'transportasi' => $subs
+                    ->where('kriteria.nama_kriteria', 'Transportasi')
+                    ->pluck('nama_subkriteria')
+                    ->implode(', '),
+
+                'keamanan' => $subs
+                    ->where('kriteria.nama_kriteria', 'Keamanan')
+                    ->pluck('nama_subkriteria')
+                    ->implode(', '),
+
+                'akses_lokasi' => $subs
+                    ->where('kriteria.nama_kriteria', 'Akses lokasi')
+                    ->pluck('nama_subkriteria')
+                    ->implode(', '),
+
+                // ranking & preferensi (kalau ada)
+                'rank' => $lokasi->hasilTopsis?->rangking,
+                'preferensi' => $lokasi->hasilTopsis?->tipe_preferensi,
+            ];
+        });
 
         return Inertia::render('admin/Topsis/Pemetaan', [
             'lokasi' => $lokasi,
