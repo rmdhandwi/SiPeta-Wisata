@@ -27,6 +27,8 @@ let map: L.Map | null = null;
 let markers: L.Marker[] = [];
 
 const selectedJenis = ref('');
+
+// Ambil semua jenis unik dan buat pilihan filter
 const jenisUnik = computed(() => [
     { label: 'Semua', value: '' },
     ...[...new Set(props.lokasi.map((l) => l.jenis))].map((j) => ({
@@ -35,63 +37,93 @@ const jenisUnik = computed(() => [
     })),
 ]);
 
-// Penentuan warna ikon
-const iconColor = (jenis: string): string => {
-    switch (jenis.toLowerCase()) {
-        case 'wisata alam':
-            return 'green';
-        case 'wisata sejarah':
-            return 'blue';
-        case 'wisata pantai':
-            return 'orange';
-        default:
-            return 'gray';
-    }
+// Warna dinamis berdasarkan indeks jenis wisata
+const generateColorByIndex = (index: number): string => {
+    const hue = (index * 47) % 360;
+    return `hsl(${hue}, 70%, 50%)`;
 };
 
-// Buat ikon Leaflet dari folder public/icon
-const createIcon = (color: string): L.Icon => {
-    return L.icon({
-        iconUrl: `/icon/marker-icon-${color}.png`,
-        shadowUrl: '/icon/marker-shadow.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41],
+// Peta jenis wisata → warna
+const colorMap = computed(() => {
+    const jenisSet = [...new Set(props.lokasi.map((l) => l.jenis))];
+    const mapping: Record<string, string> = {};
+    jenisSet.forEach((jenis, index) => {
+        mapping[jenis] = generateColorByIndex(index);
+    });
+    return mapping;
+});
+
+// Ambil warna dari jenis
+const iconColor = (jenis: string): string => {
+    return colorMap.value[jenis] || '#999';
+};
+
+// Buat ikon lingkaran dengan angka dan warna
+const createIcon = (rank: number, color: string): L.DivIcon => {
+    return L.divIcon({
+        html: `
+            <div style="
+                background-color: ${color};
+                color: white;
+                width: 26px;
+                height: 26px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                font-size: 13px;
+                font-weight: 600;
+                border: 2px solid #fff;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            ">
+                ${rank || ''}
+            </div>
+        `,
+        className: 'custom-marker-icon',
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
+        popupAnchor: [0, -13],
     });
 };
 
-// Tambah marker ke peta
+// Tambah dan update marker ke peta
 const updateMarkers = () => {
     if (!map) return;
+
+    // Bersihkan marker lama
     markers.forEach((m) => m.remove());
     markers = [];
 
-    const lokasiFiltered = props.lokasi.filter((l) => !selectedJenis.value || l.jenis === selectedJenis.value);
+    const lokasiFiltered = props.lokasi.filter(
+        (l) => !selectedJenis.value || l.jenis === selectedJenis.value
+    );
 
     lokasiFiltered.forEach((lokasi) => {
         const lat = Number(lokasi.latitude);
         const lng = Number(lokasi.longitude);
         if (isNaN(lat) || isNaN(lng)) return;
 
+        const color = iconColor(lokasi.jenis);
+        const rank = lokasi.rank ?? '';
+
         const marker = L.marker([lat, lng], {
-            icon: createIcon(iconColor(lokasi.jenis)),
+            icon: createIcon(rank as number, color),
         }).addTo(map!);
 
         const popup = `
-        <div style="font-size: 14px;">
-            <strong style="font-size: 16px;">${lokasi.nama}</strong>
-            <table style="margin-top: 5px;">
-            ${lokasi.rank !== undefined ? `<tr><td><b>Ranking</b></td><td>: ${lokasi.rank}</td></tr>` : ''}
-            ${lokasi.preferensi !== undefined ? `<tr><td><b>Preferensi</b></td><td>: ${lokasi.preferensi}</td></tr>` : ''}
-                <tr><td><b>Jenis</b></td><td>: ${lokasi.jenis}</td></tr>
-                <tr><td><b>Fasilitas</b></td><td>: ${lokasi.fasilitas || '-'}</td></tr>
-                <tr><td><b>Keamanan</b></td><td>: ${lokasi.keamanan || '-'}</td></tr>
-                <tr><td><b>Akses</b></td><td>: ${lokasi.akses_lokasi || '-'}</td></tr>
-                <tr><td><b>Transportasi</b></td><td>: ${lokasi.transportasi || '-'}</td></tr>
-            </table>
-        </div>
-    `;
+            <div style="font-size: 14px;">
+                <strong style="font-size: 16px;">${lokasi.nama}</strong>
+                <table style="margin-top: 5px;">
+                    ${lokasi.rank !== undefined ? `<tr><td><b>Ranking</b></td><td>: ${lokasi.rank}</td></tr>` : ''}
+                    ${lokasi.preferensi !== undefined ? `<tr><td><b>Preferensi</b></td><td>: ${lokasi.preferensi}</td></tr>` : ''}
+                    <tr><td><b>Jenis</b></td><td>: ${lokasi.jenis}</td></tr>
+                    <tr><td><b>Fasilitas</b></td><td>: ${lokasi.fasilitas || '-'}</td></tr>
+                    <tr><td><b>Keamanan</b></td><td>: ${lokasi.keamanan || '-'}</td></tr>
+                    <tr><td><b>Akses</b></td><td>: ${lokasi.akses_lokasi || '-'}</td></tr>
+                    <tr><td><b>Transportasi</b></td><td>: ${lokasi.transportasi || '-'}</td></tr>
+                </table>
+            </div>
+        `;
         marker.bindPopup(popup);
         markers.push(marker);
     });

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\admin\SubkriteriaRequest;
 use App\Models\Subkriteria;
 use App\Models\Subsubkriteria;
+use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -28,11 +30,17 @@ class SubkriteriaController extends Controller
     public function store(SubkriteriaRequest $request): RedirectResponse
     {
         try {
-            Subkriteria::create($request->validated());
+            Subkriteria::create([
+                'kriteria_id' => $request->kriteria_id,
+                'nama_subkriteria' => trim($request->nama_subkriteria),
+                'bobot_subkriteria' => $request->bobot_subkriteria,
+            ]);
 
-            return redirect()->back()->with('success', 'Data subkriteria berhasil ditambahkan.');
-        } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', 'Gagal menambahkan data subkriteria. Silakan coba lagi.');
+            return redirect()->route('admin.subkriteria.index')
+                ->with('success', 'Data subkriteria berhasil ditambahkan.');
+        } catch (Exception $e) {
+            return back()->withInput()
+                ->with('error', 'Gagal menambahkan data.');
         }
     }
 
@@ -70,16 +78,20 @@ class SubkriteriaController extends Controller
     }
 
 
-    public function update(SubkriteriaRequest $request, subkriteria $subkriteria): RedirectResponse
+    public function update(SubkriteriaRequest $request, Subkriteria $subkriteria): RedirectResponse
     {
         try {
-            $subkriteria->update($request->validated());
+            $subkriteria->update([
+                'kriteria_id' => $request->kriteria_id,
+                'nama_subkriteria' => trim($request->nama_subkriteria),
+                'bobot_subkriteria' => $request->bobot_subkriteria,
+            ]);
 
-            return Redirect::route('admin.subkriteria.index')
+            return redirect()->route('admin.subkriteria.index')
                 ->with('success', 'Data subkriteria berhasil diperbarui.');
-        } catch (\Exception $e) {
-            return Redirect::route('admin.subkriteria.index')
-                ->with('error', 'Terjadi kesalahan saat memperbarui data.');
+        } catch (Exception $e) {
+            return back()->withInput()
+                ->with('error', 'Gagal update data.');
         }
     }
 
@@ -93,10 +105,10 @@ class SubkriteriaController extends Controller
 
             return redirect()->route('admin.subkriteria.index')
                 ->with('success', 'Data subkriteria berhasil dihapus.');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             return redirect()->route('admin.subkriteria.index')
                 ->with('error', 'Data subkriteria tidak ditemukan.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return redirect()->route('admin.subkriteria.index')
                 ->with('error', 'Terjadi kesalahan saat menghapus data.');
         }

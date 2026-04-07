@@ -6,6 +6,7 @@ use App\Models\HasilTopsis;
 use App\Models\Kriteria;
 use App\Models\LokasiWisata;
 use App\Models\NilaiAlternatif;
+use App\Models\Subkriteria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
@@ -13,167 +14,254 @@ use Inertia\Inertia;
 
 class HasilTopsisController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index()
     {
-        $kriteria = Kriteria::with('subkriteria')->get();
-
-        // Validasi: jika jumlah kriteria < 5
-        if ($kriteria->count() < 5) {
-            return Redirect::route('admin.kriteria.index')
-                ->with('error', 'Jumlah kriteria kurang dari 5. Tidak bisa melakukan perhitungan TOPSIS.');
+        // helper format 3 desimal (HANYA UNTUK OUTPUT)
+        function f3($val)
+        {
+            return number_format($val, 3, '.', '');
         }
 
-        $alternatif = NilaiAlternatif::with(['lokasi', 'subkriteria', 'subkriteria.kriteria'])
-            ->get()
-            ->groupBy('lokasi_wisata_id');
+        $kriteriaList = Kriteria::select('id_kriteria', 'nama_kriteria', 'bobot_kriteria', 'tipe_kriteria')
+            ->orderBy('id_kriteria')
+            ->get();
+
+        // ===============================
+        // VALIDASI
+        // ===============================
+        $totalBobot = $kriteriaList->sum('bobot_kriteria');
+        if ($totalBobot != 100) {
+            return Redirect::route('admin.kriteria.index')
+                ->with('error', 'Total bobot harus 100, sekarang: ' . $totalBobot);
+        }
+
+        // ===============================
+        // AMBIL DATA
+        // ===============================
+        $alternatif = NilaiAlternatif::with([
+            'lokasi.jenisWisata',
+            'subkriteria.kriteria'
+        ])->get()->groupBy('lokasi_wisata_id');
 
         $lokasiMap = LokasiWisata::pluck('nama_lokasi_wisata', 'id_lokasi_wisata')->toArray();
 
-        // Ambil nama kriteria
-        $namaKriteriaMap = $kriteria->pluck('nama_kriteria', 'id_kriteria')->toArray();
+        // ===============================
+        // 1. MATRIX (TANPA PEMBULATAN)
+        // ===============================
+        $matrix = [];
 
-        // Matriks Keputusan
-        $matrixKeputusan = [];
         foreach ($alternatif as $lokasiId => $items) {
-            foreach ($items as $item) {
-                $kriteriaId = $item->subkriteria->kriteria_id;
-                $namaKriteria = $namaKriteriaMap[$kriteriaId] ?? "K{$kriteriaId}";
-                $matrixKeputusan[$lokasiId]['alternatif'] = $item->lokasi->nama_lokasi_wisata;
-                $matrixKeputusan[$lokasiId][$namaKriteria] = $item->nilai;
-            }
-        }
 
-        if (empty($matrixKeputusan)) {
-            return Redirect::route('admin.alternatif.index')
-                ->with('error', 'Tidak ada data alternatif yang dapat dihitung.');
-        }
+            $lokasi = $items->first()->lokasi;
+            $matrix[$lokasiId]['alternatif'] = $lokasi->nama_lokasi_wisata;
 
-        // Normalisasi Matriks
-        $matrixTernormalisasi = [];
-        foreach ($namaKriteriaMap as $id => $nama) {
-            $sumSquares = 0;
-            foreach ($matrixKeputusan as $nilai) {
-                if (isset($nilai[$nama])) {
-                    $sumSquares += pow($nilai[$nama], 2);
+            foreach ($kriteriaList as $k) {
+
+                $nama = $k->nama_kriteria;
+
+                if ($nama === 'Jenis wisata') {
+                    $jenisNama = $lokasi->jenisWisata?->nama_jenis_wisata;
+                    $sub = Subkriteria::where('nama_subkriteria', $jenisNama)->first();
+
+                    $matrix[$lokasiId][$nama] = $sub?->bobot_subkriteria ?? 0;
+                } else {
+                    $vals = $items
+                        ->where('subkriteria.kriteria_id', $k->id_kriteria)
+                        ->pluck('nilai')
+                        ->toArray();
+
+                    $matrix[$lokasiId][$nama] =
+                        count($vals) ? array_sum($vals) / count($vals) : 0;
                 }
             }
-            $denom = sqrt($sumSquares ?: 1);
+        }
 
-            foreach ($matrixKeputusan as $lokasiId => $nilai) {
-                $matrixTernormalisasi[$lokasiId]['alternatif'] = $nilai['alternatif'];
-                $matrixTernormalisasi[$lokasiId][$nama] = isset($nilai[$nama])
-                    ? round($nilai[$nama] / $denom, 3) : 0.0000;
+        uasort($matrix, fn($a, $b) => strcmp($a['alternatif'], $b['alternatif']));
+
+        // ===============================
+        // 2. NORMALISASI (TANPA PEMBULATAN)
+        // ===============================
+        $normalisasi = [];
+        $pembagiList = [];
+
+        foreach ($kriteriaList as $k) {
+
+            $nama = $k->nama_kriteria;
+
+            $sum = 0;
+            foreach ($matrix as $row) {
+                $sum += pow($row[$nama], 2);
+            }
+
+            $pembagi = sqrt($sum ?: 1);
+            $pembagiList[$nama] = $pembagi;
+
+            foreach ($matrix as $id => $row) {
+                $normalisasi[$id]['alternatif'] = $row['alternatif'];
+                $normalisasi[$id][$nama] = $row[$nama] / $pembagi;
             }
         }
 
-        // dd($matrixKeputusan);
+        uasort($normalisasi, fn($a, $b) => strcmp($a['alternatif'], $b['alternatif']));
 
-        // Pembobotan Matriks
+        // ===============================
+        // 3. PEMBOBOTAN (TANPA PEMBULATAN)
+        // ===============================
         $pembobotan = [];
-        foreach ($matrixTernormalisasi as $lokasiId => $nilai) {
-            $pembobotan[$lokasiId]['alternatif'] = $nilai['alternatif'];
-            foreach ($kriteria as $k) {
-                $nama = $namaKriteriaMap[$k->id_kriteria];
-                $bobot = $k->bobot_kriteria;
-                $pembobotan[$lokasiId][$nama] = round(($nilai[$nama] ?? 0) * $bobot, 3);
+
+        foreach ($normalisasi as $id => $row) {
+
+            $pembobotan[$id]['alternatif'] = $row['alternatif'];
+
+            foreach ($kriteriaList as $k) {
+                $nama = $k->nama_kriteria;
+                $bobot = $k->bobot_kriteria / 100;
+
+                $pembobotan[$id][$nama] = $row[$nama] * $bobot;
             }
         }
 
-        // Solusi Ideal berdasarkan tipe kriteria (benefit/cost)
+        uasort($pembobotan, fn($a, $b) => strcmp($a['alternatif'], $b['alternatif']));
+
+        // ===============================
+        // 4. SOLUSI IDEAL (TANPA PEMBULATAN)
+        // ===============================
         $idealPositif = [];
         $idealNegatif = [];
 
-        foreach ($kriteria as $k) {
-            $nama = $namaKriteriaMap[$k->id_kriteria];
+        foreach ($kriteriaList as $k) {
+
+            $nama = $k->nama_kriteria;
             $values = array_column($pembobotan, $nama);
 
-            if (strtolower($k->tipe_kriteria) === 'benefit') {
-                $idealPositif[$nama] = !empty($values) ? round(max($values), 3) : 0.000;
-                $idealNegatif[$nama] = !empty($values) ? round(min($values), 3) : 0.000;
-            } else { // cost
-                $idealPositif[$nama] = !empty($values) ? round(min($values), 3) : 0.000;
-                $idealNegatif[$nama] = !empty($values) ? round(max($values), 3) : 0.000;
+            if ($k->tipe_kriteria === 'Benefit') {
+                $idealPositif[$nama] = max($values);
+                $idealNegatif[$nama] = min($values);
+            } else {
+                $idealPositif[$nama] = min($values);
+                $idealNegatif[$nama] = max($values);
             }
         }
 
+        ksort($idealPositif);
+        ksort($idealNegatif);
 
-        // Jarak ke Solusi Ideal
-        $dPlus = [];
-        $dMin = [];
-        foreach ($pembobotan as $lokasiId => $nilai) {
-            $dPlus[$lokasiId] = 0;
-            $dMin[$lokasiId] = 0;
-            foreach ($namaKriteriaMap as $id => $nama) {
-                $dPlus[$lokasiId] += pow(($nilai[$nama] ?? 0) - $idealPositif[$nama], 2);
-                $dMin[$lokasiId] += pow(($nilai[$nama] ?? 0) - $idealNegatif[$nama], 2);
+        // ===============================
+        // 5. JARAK (TANPA PEMBULATAN)
+        // ===============================
+        $jarak = ['positif' => [], 'negatif' => []];
+
+        foreach ($pembobotan as $id => $row) {
+
+            $sumPlus = 0;
+            $sumMin = 0;
+
+            foreach ($kriteriaList as $k) {
+                $nama = $k->nama_kriteria;
+
+                $sumPlus += pow($row[$nama] - $idealPositif[$nama], 2);
+                $sumMin += pow($row[$nama] - $idealNegatif[$nama], 2);
             }
-            $dPlus[$lokasiId] = round(sqrt($dPlus[$lokasiId]), 3);
-            $dMin[$lokasiId] = round(sqrt($dMin[$lokasiId]), 3);
+
+            $namaLokasi = $row['alternatif'];
+
+            $jarak['positif'][$namaLokasi] = sqrt($sumPlus);
+            $jarak['negatif'][$namaLokasi] = sqrt($sumMin);
         }
 
-        // Preferensi
+        ksort($jarak['positif']);
+        ksort($jarak['negatif']);
+
+        // ===============================
+        // 6. PREFERENSI (TANPA PEMBULATAN)
+        // ===============================
         $preferensi = [];
-        foreach ($dPlus as $lokasiId => $dp) {
-            $dm = $dMin[$lokasiId];
-            $preferensi[$lokasiId] = round(($dp + $dm > 0 ? $dm / ($dp + $dm) : 0), 3);
+
+        foreach ($jarak['positif'] as $namaLokasi => $dp) {
+
+            $dm = $jarak['negatif'][$namaLokasi];
+
+            $preferensi[$namaLokasi] =
+                ($dp + $dm > 0) ? $dm / ($dp + $dm) : 0;
         }
 
-        // Peringkat
+        ksort($preferensi);
+
+        // ===============================
+        // 7. RANKING
+        // ===============================
         arsort($preferensi);
+
         $peringkat = [];
         $rank = 1;
-        foreach ($preferensi as $id => $val) {
+
+        foreach ($preferensi as $namaLokasi => $val) {
             $peringkat[] = [
-                'id' => $lokasiMap[$id] ?? $id,
-                'nilai' => $val,
+                'id' => $namaLokasi,
+                'nilai' => f3($val), // 🔥 dibulatkan di sini saja
                 'rank' => $rank++,
             ];
         }
 
-        // Konversi id ke nama di preferensi dan jarak juga
-        $preferensiWithName = [];
-        foreach ($preferensi as $id => $val) {
-            $preferensiWithName[$lokasiMap[$id] ?? $id] = $val;
-        }
-
-        $dPlusNamed = [];
-        $dMinNamed = [];
-        foreach ($dPlus as $id => $val) {
-            $dPlusNamed[$lokasiMap[$id] ?? $id] = $val;
-            $dMinNamed[$lokasiMap[$id] ?? $id] = $dMin[$id];
-        }
-
-        // Hapus semua data hasil_topsis dan reset id
+        // ===============================
+        // 8. SIMPAN
+        // ===============================
         DB::table('hasil_topsis')->truncate();
 
-        // Simpan hasil baru
         foreach ($peringkat as $entry) {
-            $lokasiId = array_search($entry['id'], $lokasiMap); // dapatkan id asli dari nama
+
+            $lokasiId = array_search($entry['id'], $lokasiMap, true);
+
             HasilTopsis::create([
                 'lokasi_wisata_id' => $lokasiId,
-                'jarak_positif' => $dPlus[$lokasiId],
-                'jarak_negative' => $dMin[$lokasiId],
-                'tipe_preferensi' => $preferensi[$lokasiId],
+                'jarak_positif' => f3($jarak['positif'][$entry['id']]),
+                'jarak_negative' => f3($jarak['negatif'][$entry['id']]),
+                'tipe_preferensi' => $entry['nilai'],
                 'rangking' => $entry['rank'],
             ]);
         }
 
+        // ===============================
+        // RETURN (SEMUA DIFORMAT DI SINI)
+        // ===============================
         return Inertia::render('admin/Topsis/Index', [
-            'matrixKeputusan' => array_values($matrixKeputusan),
-            'normalisasi' => array_values($matrixTernormalisasi),
-            'bobotMatriks' => array_values($pembobotan),
+            'matrixKeputusan' => collect($matrix)->map(
+                fn($row) =>
+                collect($row)->map(
+                    fn($v, $k) =>
+                    $k === 'alternatif' ? $v : f3($v)
+                )
+            )->values(),
+
+            'normalisasi' => collect($normalisasi)->map(
+                fn($row) =>
+                collect($row)->map(
+                    fn($v, $k) =>
+                    $k === 'alternatif' ? $v : f3($v)
+                )
+            )->values(),
+
+            'bobotMatriks' => collect($pembobotan)->map(
+                fn($row) =>
+                collect($row)->map(
+                    fn($v, $k) =>
+                    $k === 'alternatif' ? $v : f3($v)
+                )
+            )->values(),
+
             'solusiIdeal' => [
-                'positif' => $idealPositif,
-                'negatif' => $idealNegatif,
+                'positif' => collect($idealPositif)->map(fn($v) => f3($v)),
+                'negatif' => collect($idealNegatif)->map(fn($v) => f3($v)),
             ],
+
             'jarak' => [
-                'positif' => $dPlusNamed,
-                'negatif' => $dMinNamed,
+                'positif' => collect($jarak['positif'])->map(fn($v) => f3($v)),
+                'negatif' => collect($jarak['negatif'])->map(fn($v) => f3($v)),
             ],
-            'preferensi' => $preferensiWithName,
+
+            'preferensi' => collect($preferensi)->map(fn($v) => f3($v)),
+
             'peringkat' => $peringkat,
         ]);
     }

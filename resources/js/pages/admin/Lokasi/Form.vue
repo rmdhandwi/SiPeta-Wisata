@@ -1,4 +1,3 @@
-div
 <script setup lang="ts">
 import HeadingSmall from '@/components/HeadingSmall.vue';
 import LeafletMap from '@/components/LeafletMap.vue';
@@ -9,7 +8,7 @@ import { SharedData, type BreadcrumbItem } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { ConfirmDialog, Select, useConfirm } from 'primevue';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useToast } from 'vue-toast-notification';
 
 const breadcrumbItems: BreadcrumbItem[] = [
@@ -28,7 +27,8 @@ const jenisWisata = ref([]);
 
 const props = defineProps<{
     data?: Record<string, any>;
-    fields: string[]; // dari controller Laravel
+    kriteriaOptions: any[];
+    fields: string[];
 }>();
 
 onMounted(async () => {
@@ -44,9 +44,38 @@ onMounted(async () => {
     }
 });
 
-const defaultForm = Object.fromEntries(props.fields.map((key) => [key, props.data?.[key] ?? '']));
+const defaultForm = Object.fromEntries(
+  props.fields.map((key) => {
+    let value = props.data?.[key] ?? '';
+
+    if (['transportasi', 'fasilitas'].includes(key)) {
+      if (typeof value === 'string') {
+        value = value ? value.split(',').map(Number) : [];
+      }
+    }
+
+    return [key, value];
+  })
+);
 
 const form = useForm(defaultForm);
+
+
+watch(
+    () => props.data,
+    (val) => {
+        if (!val) return;
+
+        if (val.transportasi) {
+            form.transportasi = Array.isArray(val.transportasi) ? val.transportasi : val.transportasi.split(',').map(Number);
+        }
+
+        if (val.fasilitas) {
+            form.fasilitas = Array.isArray(val.fasilitas) ? val.fasilitas : val.fasilitas.split(',').map(Number);
+        }
+    },
+    { immediate: true },
+);
 
 // Submit function
 function submit() {
@@ -92,12 +121,24 @@ function doSubmit() {
     isEdit ? form.put(url, callback) : form.post(url, callback);
 }
 
-const visibleFields = computed(() => props.fields.filter((f) => !['id_lokasi_wisata', 'latitude', 'longitude'].includes(f)));
+const visibleFields = computed(() =>
+    props.fields.filter((f) => !['id_lokasi_wisata', 'latitude', 'longitude', 'transportasi', 'fasilitas'].includes(f)),
+);
+
+// cek apakah field termasuk kriteria
+function isKriteria(field: string) {
+    return props.kriteriaOptions.some((k) => k.nama_kriteria.toLowerCase().replace(/\s/g, '_') === field);
+}
+
+// ambil subkriteria berdasarkan field
+function getSubkriteria(field: string) {
+    const kriteria = props.kriteriaOptions.find((k) => k.nama_kriteria.toLowerCase().replace(/\s/g, '_') === field);
+
+    return kriteria ? kriteria.subkriteria : [];
+}
 
 function formatLabel(field: string): string {
-  return field
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (char) => char.toUpperCase()); // huruf depan setiap kata kapital
+    return field.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()); // huruf depan setiap kata kapital
 }
 </script>
 
@@ -122,19 +163,67 @@ function formatLabel(field: string): string {
                                 optionValue="id_jenis_wisata"
                                 :invalid="!!form.errors[field]"
                                 class="w-full"
-                                placeholder="Pilih Jenis Wisata"
+                                :placeholder="'Pilih ' + formatLabel(field)"
                             />
-                            <InputText
-                                v-else
+
+                            <Select
+                                v-else-if="isKriteria(field)"
                                 v-model="form[field]"
-                                :id="field"
-                                :invalid="!!form.errors[field]"
+                                :options="getSubkriteria(field)"
+                                optionLabel="nama_subkriteria"
+                                optionValue="id_subkriteria"
                                 class="w-full"
-                                :placeholder="`Masukkan ${field.replace(/_/g, ' ')}`"
+                                :placeholder="'Pilih ' + formatLabel(field)"
+                                :invalid="!!form.errors[field]"
                             />
+
+                            <InputText
+                                v-else-if="field === 'nama_lokasi_wisata'"
+                                v-model="form[field]"
+                                class="w-full"
+                                :invalid="!!form.errors[field]"
+                                placeholder="Contoh: Pantai Pasir Putih"
+                            />
+
                             <Message v-if="form.errors[field]" severity="error" size="small" variant="simple">
                                 {{ form.errors[field] }}
                             </Message>
+                        </div>
+
+                        <div class="col-span-full grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <Label for="transportasi">Transportasi</Label>
+                                <MultiSelect
+                                    v-model="form.transportasi"
+                                    :options="getSubkriteria('transportasi')"
+                                    optionLabel="nama_subkriteria"
+                                    optionValue="id_subkriteria"
+                                    :invalid="!!form.errors.transportasi"
+                                    class="w-full"
+                                    :multiple="true"
+                                    placeholder="Pilih Transportasi"
+                                />
+                                <Message v-if="form.errors.transportasi" severity="error" size="small" variant="simple">
+                                    {{ form.errors.transportasi }}
+                                </Message>
+                            </div>
+
+                            <div class="space-y-2">
+                                <Label for="fasilitas">Fasilitas</Label>
+                                <MultiSelect
+                                    v-model="form.fasilitas"
+                                    :options="getSubkriteria('fasilitas')"
+                                    optionLabel="nama_subkriteria"
+                                    optionValue="id_subkriteria"
+                                    :invalid="!!form.errors.fasilitas"
+                                    class="w-full"
+                                    :multiple="true"
+                                    placeholder="Pilih Fasilitas"
+                                />
+                                <Message v-if="form.errors.fasilitas" severity="error" size="small" variant="simple">
+                                    {{ form.errors.fasilitas }}
+                                </Message>
+                            </div>
                         </div>
 
                         <!-- Latitude dan Longitude -->

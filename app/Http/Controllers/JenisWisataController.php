@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Admin\JenisWisataRequest;
 use App\Models\JenisWisata;
+use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -25,14 +27,14 @@ class JenisWisataController extends Controller
         return Inertia::render('admin/JenisWisata/Form');
     }
 
-    
+
     public function store(JenisWisataRequest $request): RedirectResponse
     {
         try {
             JenisWisata::create($request->validated());
 
             return redirect()->back()->with('success', 'Data jenis wisata berhasil ditambahkan.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Tangani error tak terduga dan beri feedback ke user
             return redirect()->back()->with('error', 'Terjadi kesalahan saat menyimpan data.');
         }
@@ -54,7 +56,7 @@ class JenisWisataController extends Controller
         return redirect()->route('admin.jeniswisata.edit');
     }
 
-   
+
     public function edit(Request $request)
     {
         // Ambil ID dari session
@@ -88,7 +90,7 @@ class JenisWisataController extends Controller
 
             return Redirect::route('admin.jeniswisata.index')
                 ->with('success', 'Data jenis wisata berhasil diperbarui.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return Redirect::route('admin.jeniswisata.index')
                 ->with('error', 'Gagal memperbarui data jenis wisata: ' . $e->getMessage());
         }
@@ -103,10 +105,10 @@ class JenisWisataController extends Controller
 
             return redirect()->route('admin.jeniswisata.index')
                 ->with('success', 'Data jenis berhasil dihapus.');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             return redirect()->route('admin.jeniswisata.index')
                 ->with('error', 'Data tidak ditemukan.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return redirect()->route('admin.jeniswisata.index')
                 ->with('error', 'Terjadi kesalahan saat menghapus data.');
         }

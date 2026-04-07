@@ -46,131 +46,153 @@ function formatHeader(col: string): string {
                 <HeadingSmall title="Perhitungan TOPSIS" description="Berikut adalah hasil dari setiap tahap perhitungan metode TOPSIS." />
 
                 <!-- Matriks Keputusan -->
-                <Card>
+                <Card class="rounded-xl shadow-md">
                     <template #content>
-                        <DataTable showGridlines :value="props.matrixKeputusan">
-                            <template #header>
-                                <h3 class="mb-2 text-lg font-semibold">Matriks Keputusan</h3>
-                            </template>
-                            <Column field="alternatif" header="Alternatif" />
-                            <template v-for="(val, key) in props.matrixKeputusan[0] ?? {}">
-                                <Column
-                                    v-if="String(key) !== 'alternatif'"
-                                    :key="String(key)"
-                                    :field="String(key)"
-                                    :header="formatHeader(String(key))"
-                                />
-                            </template>
-                        </DataTable>
+                        <div class="overflow-hidden">
+                            <DataTable showGridlines :value="props.matrixKeputusan" scrollable scrollHeight="300px">
+                                <template #header>
+                                    <h3 class="mb-2 text-lg font-semibold">Matriks Keputusan</h3>
+                                </template>
+                                <Column field="alternatif" header="Alternatif" />
+                                <template v-for="(val, key) in props.matrixKeputusan[0] ?? {}">
+                                    <Column
+                                        v-if="String(key) !== 'alternatif'"
+                                        :key="String(key)"
+                                        :field="String(key)"
+                                        :header="formatHeader(String(key))"
+                                    />
+                                </template>
+                            </DataTable>
+                        </div>
                     </template>
                 </Card>
 
                 <!-- Normalisasi -->
-                <Card>
+                <Card class="rounded-xl shadow-md">
                     <template #content>
-                        <DataTable showGridlines :value="props.normalisasi">
-                            <template #header>
-                                <h3 class="mt-4 mb-2 text-lg font-semibold">Normalisasi</h3>
-                            </template>
-                            <Column field="alternatif" header="Alternatif" />
-                            <template v-for="(val, key) in props.normalisasi[0] ?? {}">
-                                <Column
-                                    v-if="String(key) !== 'alternatif'"
-                                    :key="String(key)"
-                                    :field="String(key)"
-                                    :header="formatHeader(String(key))"
-                                />
-                            </template>
-                        </DataTable>
+                        <div class="overflow-hidden">
+                            <DataTable showGridlines :value="props.normalisasi" scrollable scrollHeight="300px">
+                                <template #header>
+                                    <h3 class="mt-4 mb-2 text-lg font-semibold">Normalisasi</h3>
+                                </template>
+                                <Column field="alternatif" header="Alternatif" />
+                                <template v-for="(val, key) in props.normalisasi[0] ?? {}">
+                                    <Column
+                                        v-if="String(key) !== 'alternatif'"
+                                        :key="String(key)"
+                                        :field="String(key)"
+                                        :header="formatHeader(String(key))"
+                                    />
+                                </template>
+                            </DataTable>
+                        </div>
                     </template>
                 </Card>
 
                 <!-- Pembobotan -->
-                <Card>
+                <Card class="rounded-xl shadow-md">
                     <template #content>
-                        <DataTable showGridlines :value="props.bobotMatriks">
-                            <template #header>
-                                <h3 class="mt-4 mb-2 text-lg font-semibold">Matriks Bobot Ternormalisasi</h3>
-                            </template>
-                            <Column field="alternatif" header="Alternatif" />
-                            <template v-for="(val, key) in props.bobotMatriks?.[0] ?? {}">
-                                <Column
-                                    v-if="String(key) !== 'alternatif'"
-                                    :key="String(key)"
-                                    :field="String(key)"
-                                    :header="formatHeader(String(key))"
-                                />
-                            </template>
-                        </DataTable>
+                        <div class="overflow-hidden">
+                            <DataTable showGridlines :value="props.bobotMatriks" scrollable scrollHeight="300px">
+                                <template #header>
+                                    <h3 class="mt-4 mb-2 text-lg font-semibold">Matriks Bobot Ternormalisasi</h3>
+                                </template>
+                                <Column field="alternatif" header="Alternatif" />
+                                <template v-for="(val, key) in props.bobotMatriks?.[0] ?? {}">
+                                    <Column
+                                        v-if="String(key) !== 'alternatif'"
+                                        :key="String(key)"
+                                        :field="String(key)"
+                                        :header="formatHeader(String(key))"
+                                    />
+                                </template>
+                            </DataTable>
+                        </div>
                     </template>
                 </Card>
 
                 <!-- Solusi Ideal -->
-                <Card>
+                <Card class="rounded-xl shadow-md">
                     <template #content>
-                        <DataTable showGridlines :value="[props.solusiIdeal.positif]">
-                            <template #header>
-                                <h3 class="mt-4 mb-2 text-lg font-semibold">Solusi Ideal Positif (A+)</h3>
-                            </template>
-                            <Column v-for="(val, key) in props.solusiIdeal.positif" :key="key" :field="key" :header="formatHeader(key)" />
-                        </DataTable>
-
-                        <DataTable showGridlines :value="[props.solusiIdeal.negatif]">
-                            <template #header>
-                                <h3 class="mt-4 mb-2 text-lg font-semibold">Solusi Ideal Negatif (A-)</h3>
-                            </template>
-                            <Column v-for="(val, key) in props.solusiIdeal.negatif" :key="key" :field="key" :header="formatHeader(key)" />
-                        </DataTable>
+                        <div class="overflow-hidden">
+                            <DataTable showGridlines :value="[props.solusiIdeal.positif]" scrollable scrollHeight="200px">
+                                <template #header>
+                                    <h3 class="mt-4 mb-2 text-lg font-semibold">Solusi Ideal Positif (A+)</h3>
+                                </template>
+                                <Column v-for="(val, key) in props.solusiIdeal.positif" :key="key" :field="key" :header="formatHeader(key)" />
+                            </DataTable>
+                        </div>
+                        <div class="overflow-hidden">
+                            <DataTable showGridlines :value="[props.solusiIdeal.negatif]" scrollable scrollHeight="200px">
+                                <template #header>
+                                    <h3 class="mt-4 mb-2 text-lg font-semibold">Solusi Ideal Negatif (A-)</h3>
+                                </template>
+                                <Column v-for="(val, key) in props.solusiIdeal.negatif" :key="key" :field="key" :header="formatHeader(key)" />
+                            </DataTable>
+                        </div>
                     </template>
                 </Card>
 
                 <!-- Jarak ke Solusi Ideal -->
-                <Card>
+                <Card class="rounded-xl shadow-md">
                     <template #content>
-                        <DataTable
-                            showGridlines
-                            :value="
-                                Object.keys(props.jarak?.positif ?? {}).map((key) => ({
-                                    alternatif: key,
-                                    positif: props.jarak?.positif?.[key] ?? 0,
-                                    negatif: props.jarak?.negatif?.[key] ?? 0,
-                                }))
-                            "
-                        >
-                            <template #header>
-                                <h3 class="mt-4 mb-2 text-lg font-semibold">Jarak ke Solusi Ideal</h3>
-                            </template>
-                            <Column field="alternatif" header="Alternatif" />
-                            <Column field="positif" header="Jarak +" />
-                            <Column field="negatif" header="Jarak -" />
-                        </DataTable>
+                        <div class="overflow-hidden">
+                            <DataTable
+                                showGridlines
+                                :value="
+                                    Object.keys(props.jarak?.positif ?? {}).map((key) => ({
+                                        alternatif: key,
+                                        positif: props.jarak?.positif?.[key] ?? 0,
+                                        negatif: props.jarak?.negatif?.[key] ?? 0,
+                                    }))
+                                "
+                                scrollable
+                                scrollHeight="250px"
+                            >
+                                <template #header>
+                                    <h3 class="mt-4 mb-2 text-lg font-semibold">Jarak ke Solusi Ideal</h3>
+                                </template>
+                                <Column field="alternatif" header="Alternatif" />
+                                <Column field="positif" header="Jarak +" />
+                                <Column field="negatif" header="Jarak -" />
+                            </DataTable>
+                        </div>
                     </template>
                 </Card>
 
                 <!-- Nilai Preferensi -->
-                <Card>
+                <Card class="rounded-xl shadow-md">
                     <template #content>
-                        <DataTable showGridlines :value="Object.entries(props.preferensi).map(([key, val]) => ({ alternatif: key, nilai: val }))">
-                            <template #header>
-                                <h3 class="mt-4 mb-2 text-lg font-semibold">Nilai Preferensi</h3>
-                            </template>
-                            <Column field="alternatif" header="Alternatif" />
-                            <Column field="nilai" header="Nilai Preferensi" />
-                        </DataTable>
+                        <div class="overflow-hidden">
+                            <DataTable
+                                showGridlines
+                                scrollable
+                                scrollHeight="250px"
+                                :value="Object.entries(props.preferensi).map(([key, val]) => ({ alternatif: key, nilai: val }))"
+                            >
+                                <template #header>
+                                    <h3 class="mt-4 mb-2 text-lg font-semibold">Nilai Preferensi</h3>
+                                </template>
+                                <Column field="alternatif" header="Alternatif" />
+                                <Column field="nilai" header="Nilai Preferensi" />
+                            </DataTable>
+                        </div>
                     </template>
                 </Card>
 
                 <!-- Peringkat -->
-                <Card>
+                <Card class="rounded-xl shadow-md">
                     <template #content>
-                        <DataTable showGridlines :value="props.peringkat">
-                            <template #header>
-                                <h3 class="mt-4 mb-2 text-lg font-semibold">Peringkat</h3>
-                            </template>
-                            <Column field="id" header="Alternatif" />
-                            <Column field="nilai" header="Nilai" />
-                            <Column field="rank" header="Peringkat" />
-                        </DataTable>
+                        <div class="overflow-hidden">
+                            <DataTable showGridlines :value="props.peringkat" scrollable scrollHeight="250px">
+                                <template #header>
+                                    <h3 class="mt-4 mb-2 text-lg font-semibold">Peringkat</h3>
+                                </template>
+                                <Column field="id" header="Alternatif" />
+                                <Column field="nilai" header="Nilai" />
+                                <Column field="rank" header="Peringkat" />
+                            </DataTable>
+                        </div>
                     </template>
                 </Card>
             </div>

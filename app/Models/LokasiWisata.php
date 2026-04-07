@@ -52,14 +52,36 @@ class LokasiWisata extends Model
 
     public function lokasiWisataAll()
     {
+        // 🔥 ambil semua subkriteria
+        $subkriteria = Subkriteria::pluck('nama_subkriteria', 'id_subkriteria');
+
+        // 🔥 ambil semua kriteria → ubah jadi nama field
+        $kriteriaFields = Kriteria::pluck('nama_kriteria')
+            ->map(fn($k) => strtolower(str_replace(' ', '_', $k)))
+            ->toArray();
+
         return LokasiWisata::with('jenisWisata:id_jenis_wisata,nama_jenis_wisata')
             ->orderBy('nama_lokasi_wisata', 'asc')
             ->get()
-            ->map(function ($item) {
-                // Ambil semua data
-                $data = collect($item)->toArray();
+            ->map(function ($item) use ($subkriteria, $kriteriaFields) {
 
-                // Sisipkan nama_jenis_wisata di awal
+                $data = $item->toArray();
+
+                foreach ($kriteriaFields as $field) {
+
+                    if (!isset($item->$field) || !$item->$field) {
+                        $data[$field] = '-';
+                        continue;
+                    }
+
+                    $ids = explode(',', $item->$field);
+
+                    $data[$field] = collect($ids)
+                        ->map(fn($id) => $subkriteria[$id] ?? null)
+                        ->filter()
+                        ->implode(', ');
+                }
+
                 return array_merge([
                     'nama_jenis_wisata' => $item->jenisWisata->nama_jenis_wisata ?? '-',
                 ], $data);

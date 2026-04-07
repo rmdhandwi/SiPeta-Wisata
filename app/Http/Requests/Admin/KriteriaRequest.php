@@ -23,7 +23,8 @@ class KriteriaRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('kriteria'); // akan null saat create
+        $kriteria = $this->route('kriteria');
+        $id = is_object($kriteria) ? $kriteria->id_kriteria : $kriteria;
 
         return [
             'nama_kriteria' => [
@@ -31,38 +32,59 @@ class KriteriaRequest extends FormRequest
                 'string',
                 Rule::unique('kriteria', 'nama_kriteria')->ignore($id, 'id_kriteria'),
             ],
+
             'bobot_kriteria' => [
                 'required',
                 'numeric',
-                'between:1,5'
-                // 'between:1,100',
-                // function ($attribute, $value, $fail) use ($id) {
-                //     $bobotLain = Kriteria::when($id, function ($query) use ($id) {
-                //         return $query->where('id_kriteria', '!=', $id);
-                //     })->sum('bobot_kriteria');
-
-                //     $totalBobot = $bobotLain + (float) $value;
-
-                //     if ($totalBobot > 100) {
-                //         $fail("Total bobot melebihi 100. Sisa bobot tersedia: " . (100 - $bobotLain));
-                //     }
-                // }
+                'min:1',
+                'max:100',
             ],
-            'tipe_kriteria' => ['required', Rule::in(['Benefit', 'Cost'])],
+
+            'tipe_kriteria' => [
+                'required',
+                Rule::in(['Benefit', 'Cost']),
+            ],
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+
+            $kriteria = $this->route('kriteria');
+            $id = is_object($kriteria) ? $kriteria->id_kriteria : $kriteria;
+
+            $bobotLain = Kriteria::when($id, function ($query) use ($id) {
+                return $query->where('id_kriteria', '!=', $id);
+            })->sum('bobot_kriteria');
+
+            $inputBobot = (float) $this->input('bobot_kriteria');
+            $total = $bobotLain + $inputBobot;
+
+            // 🔥 wajib = 100
+            if ($total != 100) {
+                $validator->errors()->add(
+                    'bobot_kriteria',
+                    'Total bobot semua kriteria harus = 100 (sekarang: ' . $total . ')'
+                );
+            }
+        });
     }
 
     public function messages(): array
     {
         return [
             'nama_kriteria.required' => 'Nama kriteria wajib diisi.',
+            'nama_kriteria.string' => 'Nama kriteria harus berupa teks.',
             'nama_kriteria.unique' => 'Nama kriteria sudah digunakan.',
-            'bobot_kriteria.required' => 'Bobot wajib diisi.',
-            'bobot_kriteria.numeric' => 'Bobot harus berupa angka.',
-            'bobot_kriteria.between' => 'Bobot harus antara 1 sampai 5.',
-            // 'bobot_kriteria.between' => 'Bobot harus antara 1 sampai 100.',
-            'tipe_kriteria.required' => 'Tipe kriteria wajib dipilih.',
-            'tipe_kriteria.in' => 'Tipe kriteria harus berupa Benefit atau Cost.',
+
+            'bobot_kriteria.required' => 'Bobot kriteria wajib diisi.',
+            'bobot_kriteria.numeric' => 'Bobot kriteria harus berupa angka.',
+            'bobot_kriteria.min' => 'Bobot minimal 1.',
+            'bobot_kriteria.max' => 'Bobot maksimal 100.',
+
+            'tipe_kriteria.required' => 'Tipe kriteria wajib diisi.',
+            'tipe_kriteria.in' => 'Tipe kriteria harus Benefit atau Cost.',
         ];
     }
 }

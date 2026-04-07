@@ -28,24 +28,25 @@ const mainNavItems = computed<NavItem[]>(() => {
                     icon: BookMarked,
                     match: ['/admin/jeniswisata', '/admin/jeniswisata/*'],
                 },
-                {
-                    title: 'Lokasi Wisata',
-                    href: '/admin/lokasiwisata',
-                    icon: MapPinned,
-                    match: ['/admin/lokasiwisata', '/admin/lokasiwisata/*'],
-                },
-                {
+                 {
                     title: 'Kriteria',
                     href: '/admin/kriteria',
                     icon: ClipboardList,
                     match: ['/admin/kriteria', '/admin/kriteria/*', '/admin/subkriteria', '/admin/subkriteria/*'],
                 },
                 {
-                    title: 'Alternatif',
-                    href: '/admin/alternatif',
-                    icon: FileUser,
-                    match: ['/admin/alternatif', '/admin/alternatif/*'],
+                    title: 'Lokasi Wisata',
+                    href: '/admin/lokasiwisata',
+                    icon: MapPinned,
+                    match: ['/admin/lokasiwisata', '/admin/lokasiwisata/*'],
                 },
+
+                // {
+                //     title: 'Alternatif',
+                //     href: '/admin/alternatif',
+                //     icon: FileUser,
+                //     match: ['/admin/alternatif', '/admin/alternatif/*'],
+                // },
                 {
                     title: 'Topsis dan Hasil',
                     href: '/admin/topsis',

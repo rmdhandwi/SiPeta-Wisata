@@ -54,44 +54,76 @@ const updateTime = () => {
 };
 setInterval(updateTime, 1000);
 
-const iconColor = (jenis: string): string => {
-    switch (jenis.toLowerCase()) {
-        case 'wisata alam':
-            return 'green';
-        case 'wisata sejarah':
-            return 'blue';
-        case 'wisata pantai':
-            return 'orange';
-        default:
-            return 'gray';
-    }
+// Warna dinamis berdasarkan indeks jenis wisata
+const generateColorByIndex = (index: number): string => {
+    const hue = (index * 47) % 360;
+    return `hsl(${hue}, 70%, 50%)`;
 };
 
-const createIcon = (color: string): L.Icon => {
-    return L.icon({
-        iconUrl: `/icon/marker-icon-${color}.png`,
-        shadowUrl: '/icon/marker-shadow.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41],
+// Peta jenis wisata → warna
+const colorMap = computed(() => {
+    const jenisSet = [...new Set(props.lokasi.map((l) => l.jenis))];
+    const mapping: Record<string, string> = {};
+    jenisSet.forEach((jenis, index) => {
+        mapping[jenis] = generateColorByIndex(index);
+    });
+    return mapping;
+});
+
+// Ambil warna dari jenis
+const iconColor = (jenis: string): string => {
+    return colorMap.value[jenis] || '#999';
+};
+
+// Buat ikon lingkaran dengan angka dan warna
+const createIcon = (rank: number, color: string): L.DivIcon => {
+    return L.divIcon({
+        html: `
+            <div style="
+                background-color: ${color};
+                color: white;
+                width: 26px;
+                height: 26px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                font-size: 13px;
+                font-weight: 600;
+                border: 2px solid #fff;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            ">
+                ${rank || ''}
+            </div>
+        `,
+        className: 'custom-marker-icon',
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
+        popupAnchor: [0, -13],
     });
 };
 
+
 const updateMarkers = () => {
     if (!map) return;
+
+    // Hapus marker sebelumnya
     markers.forEach((m) => m.remove());
     markers = [];
 
+    // Filter lokasi berdasarkan jenis jika dipilih
     const lokasiFiltered = props.lokasi.filter((l) => !selectedJenis.value || l.jenis === selectedJenis.value);
 
     lokasiFiltered.forEach((lokasi) => {
         const lat = Number(lokasi.latitude);
         const lng = Number(lokasi.longitude);
         if (isNaN(lat) || isNaN(lng)) return;
-        const isTopRank = lokasi.rank === 1;
-        const marker = L.marker([lokasi.latitude, lokasi.longitude], {
-            icon: createIcon(iconColor(lokasi.jenis)),
+
+        const color = iconColor(lokasi.jenis);
+        const rank = lokasi.rank ?? ''; // Gunakan string kosong jika undefined
+
+        const marker = L.marker([lat, lng], {
+            icon: createIcon(rank as number, color),
         }).addTo(map!);
 
         marker.on('click', () => {
@@ -101,6 +133,7 @@ const updateMarkers = () => {
         markers.push(marker);
     });
 };
+
 
 const initMap = async () => {
     await nextTick();

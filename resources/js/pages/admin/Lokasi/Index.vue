@@ -202,15 +202,16 @@ function doDestroy(id: number) {
                                 <span class="flex justify-center">Memuat Data...</span>
                             </template>
 
+
                             <template #empty>
                                 <span class="flex justify-center">Tidak Ada Lokasi Wisata</span>
                             </template>
-
                             <Column header="No">
                                 <template #body="slotProps">
                                     {{ slotProps.index + 1 }}
                                 </template>
                             </Column>
+
                             <Column v-for="col in columns" :key="col" :field="col" :header="formatHeader(col)">
                                 <template #body="slotProps">
                                     {{ slotProps.data[col] }}

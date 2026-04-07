@@ -26,7 +26,6 @@ class Subkriteria extends Model
         'kriteria_id',
         'nama_subkriteria',
         'bobot_subkriteria',
-        'tipe_subkriteria'
     ];
 
 
@@ -38,7 +37,7 @@ class Subkriteria extends Model
                     ->whereColumn('kriteria.id_kriteria', 'subkriteria.kriteria_id')
             )
             ->get();
-    }      
+    }
 
     // Opsional jika ada relasi
     public function kriteria()

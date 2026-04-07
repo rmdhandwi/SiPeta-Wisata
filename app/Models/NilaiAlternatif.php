@@ -22,7 +22,7 @@ class NilaiAlternatif extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'id_subkriteria',
+        'id_alternatif',
         'lokasi_wisata_id',
         'subkriteria_id',
         'nilai',

@@ -69,7 +69,7 @@ const initMap = async () => {
     // Jika ada bounds, sesuaikan tampilan peta
     if (bounds.length > 0) {
         map.invalidateSize();
-        map.fitBounds(bounds, { padding: [30, 20] });
+        map.fitBounds(bounds, { padding: [30, 30] });
     } else {
         // fallback jika tidak ada lokasi valid
         map.setView([-2.533, 140.703], 10);
@@ -78,8 +78,18 @@ const initMap = async () => {
 
 onMounted(() => {
     initMap();
-    setTimeout(() => window.print(), 1000);
+
+    // Tunggu peta render, lalu cetak
+    setTimeout(() => {
+        window.print();
+    }, 1000);
+
+    // Setelah print selesai, redirect ke halaman index
+    window.addEventListener('afterprint', () => {
+        window.location.href = '/laporan'; // Ganti '/' dengan rute index Anda
+    });
 });
+
 </script>
 
 <template>
@@ -128,3 +138,12 @@ onMounted(() => {
         </table>
     </div>
 </template>
+<style>
+@media print {
+  @page {
+    size: landscape;
+    margin: 1cm;
+  }
+}
+</style>
+

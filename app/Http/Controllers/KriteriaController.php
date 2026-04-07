@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\admin\KriteriaRequest;
 use App\Models\Kriteria;
+use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,8 +31,9 @@ class KriteriaController extends Controller
         try {
             Kriteria::create($request->validated());
 
+
             return redirect()->back()->with('success', 'Data kriteria berhasil ditambahkan.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return redirect()->back()->withInput()->with('error', 'Gagal menambahkan data kriteria. Silakan coba lagi.');
         }
     }
@@ -69,17 +71,24 @@ class KriteriaController extends Controller
         ]);
     }
 
-
-    public function update(KriteriaRequest $request, Kriteria $Kriteria): RedirectResponse
+    public function update(KriteriaRequest $request, Kriteria $kriteria): RedirectResponse
     {
         try {
-            $Kriteria->update($request->validated());
+            $sessionId = session('edit_kriteria_id');
+
+            if (!$sessionId || $sessionId != $kriteria->id_kriteria) {
+                return Redirect::route('admin.kriteria.index')
+                    ->with('error', 'Akses tidak valid.');
+            }
+
+            $kriteria->update($request->validated());
 
             return Redirect::route('admin.kriteria.index')
                 ->with('success', 'Data kriteria berhasil diperbarui.');
-        } catch (\Exception $e) {
-            return Redirect::route('admin.kriteria.index')
-                ->with('error', 'Terjadi kesalahan saat memperbarui data.');
+        } catch (Exception $e) {
+            return back()->withErrors([
+                'error' => 'Terjadi kesalahan saat memperbarui data.'
+            ]);
         }
     }
 
@@ -96,7 +105,7 @@ class KriteriaController extends Controller
         } catch (ModelNotFoundException $e) {
             return redirect()->route('admin.kriteria.index')
                 ->with('error', 'Data kriteria tidak ditemukan.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return redirect()->route('admin.kriteria.index')
                 ->with('error', 'Terjadi kesalahan saat menghapus data.');
         }

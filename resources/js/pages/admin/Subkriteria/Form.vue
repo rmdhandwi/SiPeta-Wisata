@@ -1,22 +1,29 @@
 <script setup lang="ts">
+import { Head, useForm, usePage } from '@inertiajs/vue3';
+import axios from 'axios';
+import { ConfirmDialog, useConfirm } from 'primevue';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useToast } from 'vue-toast-notification';
+
+import Button from 'primevue/button';
+import Select from 'primevue/dropdown';
+import InputText from 'primevue/inputtext';
+import Message from 'primevue/message';
+
 import HeadingSmall from '@/components/HeadingSmall.vue';
 import Label from '@/components/ui/label/Label.vue';
 import AdminLayout from '@/layouts/admin/Kriteria.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { SharedData, type BreadcrumbItem } from '@/types';
-import { Head, useForm, usePage } from '@inertiajs/vue3';
-import axios from 'axios';
-import { ConfirmDialog, Select, useConfirm } from 'primevue';
-import { onMounted, ref } from 'vue';
-import { useToast } from 'vue-toast-notification';
 
-const breadcrumbItems: BreadcrumbItem[] = [
-    {
-        title: 'Form Sub Kriteria',
-        href: '/subkriteria/create',
-    },
-];
+const breadcrumbItems: BreadcrumbItem[] = [{ title: 'Form Sub Kriteria', href: '/subkriteria/create' }];
 
+const toast = useToast();
+const confirm = useConfirm();
+const page = usePage<SharedData>();
+const loading = ref(false);
+
+// Props (edit mode)
 const props = defineProps<{
     data?: {
         id_subkriteria?: number;
@@ -26,27 +33,16 @@ const props = defineProps<{
     };
 }>();
 
-const kriteria = ref([]);
+const kriteria = ref<any[]>([]);
+const jenisWisata = ref<any[]>([]);
+const selectedOption = ref(null);
 
-onMounted(async () => {
-    try {
-        const response = await axios.get('/api/kriteria');
-        kriteria.value = response.data ?? [];
-    } catch (error: any) {
-        // Flash error dari response jika tersedia
-        const message = error?.response?.data?.message || 'Gagal memuat data';
-        toast.error(message, { position: 'top-right', duration: 3000 });
-    } finally {
-        loading.value = false;
-    }
-});
+// Opsi checkbox
+const fasilitasOptions = ['Spot foto', 'Tempat Makan', 'Toilet', 'Tempat parkir', 'Tempat sampah'];
+const transportasiOptions = ['Mobil', 'Motor', 'Perahu'];
+const aksesLokasiOptions = ['Akses jalan mulus dan lebar', 'Akses jalan luas', 'Akses jalan sempit', 'Akses jalan berlubang'];
 
-const page = usePage<SharedData>();
-const loading = ref(false);
-const confirm = useConfirm();
-const toast = useToast();
-
-// Setup form dengan default value dari props.data jika ada (edit mode)
+// Form setup
 const form = useForm({
     id_subkriteria: props.data?.id_subkriteria ?? null,
     kriteria_id: props.data?.kriteria_id ?? null,
@@ -54,104 +50,174 @@ const form = useForm({
     bobot_subkriteria: props.data?.bobot_subkriteria ?? '',
 });
 
-// Submit function
+// Ambil data kriteria
+onMounted(async () => {
+    try {
+        const [kriteriaRes, jenisRes] = await Promise.all([axios.get('/api/kriteria'), axios.get('/api/jenis-wisata')]);
+
+        kriteria.value = kriteriaRes.data ?? [];
+        jenisWisata.value = jenisRes.data ?? [];
+    } catch (error: any) {
+        const message = error?.response?.data?.message || 'Gagal memuat data';
+        toast.error(message, { position: 'top-right' });
+    }
+});
+
+const setBobot = () => {
+    const name = getKriteriaName(form.kriteria_id);
+    const val = selectedOption.value;
+
+    if (!val) return;
+
+    // jenis wisata = manual
+    if (name === 'Jenis wisata') return;
+
+    const bobot = bobotMap[name]?.[val];
+
+    if (bobot !== undefined) {
+        form.bobot_subkriteria = bobot.toString();
+    }
+};
+
+// Perhitungan bobot otomatis berdasarkan pilihan checkbox
+watch(selectedOption, () => {
+    setBobot();
+});
+
+watch(
+    () => [kriteria.value.length, jenisWisata.value.length],
+    () => {
+        if (!props.data) return;
+
+        const val = props.data.nama_subkriteria?.trim();
+
+        selectedOption.value = val;
+        form.nama_subkriteria = val;
+
+        // 🔥 tunggu reactivity selesai baru hitung bobot
+        setTimeout(() => {
+            setBobot();
+        }, 0);
+    },
+    { immediate: true },
+);
+
+// Ambil nama kriteria dari ID
+const getKriteriaName = (id: string | number | null) => {
+    const item = kriteria.value.find((k: any) => k.id_kriteria === id);
+    return item?.nama_kriteria || '';
+};
+
+// Tentukan apakah kriteria menggunakan checkbox
+const usesRadio = computed(() => {
+    const name = getKriteriaName(form.kriteria_id);
+    return ['Fasilitas', 'Transportasi', 'Akses lokasi', 'Jenis wisata'].includes(name);
+});
+
+const isJenisWisata = computed(() => {
+    return getKriteriaName(form.kriteria_id) === 'Jenis wisata';
+});
+
+const bobotMap: Record<string, Record<string, number>> = {
+    Fasilitas: {
+        'Tempat sampah': 1,
+        'Tempat parkir': 2,
+        Toilet: 3,
+        'Tempat Makan': 4,
+        'Spot foto': 5,
+    },
+    Transportasi: {
+        Motor: 1,
+        Mobil: 3,
+        Perahu: 5,
+    },
+    'Akses lokasi': {
+        'Akses jalan berlubang': 1,
+        'Akses jalan sempit': 3,
+        'Akses jalan luas': 4,
+        'Akses jalan mulus dan lebar': 5,
+    },
+};
+
+watch(
+    () => form.kriteria_id,
+    () => {
+        const name = getKriteriaName(form.kriteria_id);
+
+        // ⛔ jangan reset kalau mode edit awal
+        if (!props.data) {
+            selectedOption.value = null;
+            form.nama_subkriteria = '';
+        }
+
+        if (name === 'Jenis wisata') {
+            form.bobot_subkriteria = '';
+        } else {
+            form.bobot_subkriteria = '0';
+        }
+    },
+);
+
 function submit() {
     if (props.data) {
-        // Konfirmasi sebelum edit
         confirm.require({
             message: 'Apakah Anda yakin ingin mengubah data ini?',
             header: 'Konfirmasi',
             icon: 'pi pi-exclamation-triangle',
-            rejectProps: {
-                label: 'Batal',
-                severity: 'secondary',
-                outlined: true,
-            },
-            acceptProps: {
-                label: 'Ya',
-                severity: 'primary',
-            },
-            accept: () => doSubmit(),
-            reject: () => {
-                toast.info('Batal mengupdate data', { position: 'top-right' });
-            },
+            accept: () => doSubmit(true),
+            reject: () => toast.info('Batal mengupdate data'),
         });
     } else {
-        // Langsung submit saat tambah
-        doSubmit();
+        doSubmit(false);
     }
 }
 
-function doSubmit() {
-    const isEdit = !!props.data;
+function doSubmit(isEdit: boolean) {
+    const url = isEdit ? route('admin.subkriteria.update', props.data?.id_subkriteria) : route('admin.subkriteria.store');
 
-    const url = isEdit ? route('admin.subkriteria.update', props.data.id_subkriteria) : route('admin.subkriteria.store');
+    const method = isEdit ? form.put.bind(form) : form.post.bind(form);
 
-    if (isEdit) {
-        form.put(url, {
-            onSuccess: () => {
-                const successMessage = page.props.flash?.success;
-                if (successMessage) {
-                    toast.success(successMessage, {
-                        position: 'top-right',
-                        duration: 3000,
-                    });
-                }
-            },
-            onError: () => {
-                const errorMessage = page.props.flash?.error;
-                if (errorMessage) {
-                    toast.error(errorMessage, {
-                        position: 'top-right',
-                        duration: 3000,
-                    });
-                }
-            },
-        });
-    } else {
-        form.post(url, {
-            onSuccess: () => {
-                const successMessage = page.props.flash?.success;
-                if (successMessage) {
-                    toast.success(successMessage, {
-                        position: 'top-right',
-                        duration: 3000,
-                    });
-                    form.reset();
-                }
-            },
-            onError: () => {
-                const errorMessage = page.props.flash?.error;
-                if (errorMessage) {
-                    toast.error(errorMessage, {
-                        position: 'top-right',
-                        duration: 3000,
-                    });
-                }
-            },
-        });
-    }
+    method(url, {
+        onSuccess: () => {
+            const msg = page.props.flash?.success;
+            if (msg) toast.success(msg);
+            if (!isEdit) {
+                form.reset();
+                selectedOption.value = null;
+            }
+        },
+        onError: () => {
+            const msg = page.props.flash?.error;
+            if (msg) toast.error(msg);
+        },
+    });
 }
+
+// Isi otomatis nama_subkriteria saat mode radio aktif
+watch(selectedOption, (val) => {
+    if (usesRadio.value && val) {
+        form.nama_subkriteria = val;
+    }
+});
 </script>
 
 <template>
-    <Head title="Tambah Data Sub Kriteria" />
+    <Head title="Form Sub Kriteria" />
     <ConfirmDialog />
     <AppLayout :breadcrumbs="breadcrumbItems">
         <AdminLayout>
             <div class="space-y-6">
-                <HeadingSmall title="Form Data Sub Kriteria" description="Tambah/Edit Sub Kriteria" />
+                <HeadingSmall title="Form Sub Kriteria" description="Tambah/Edit Sub Kriteria" />
 
-                <form @submit.prevent="submit" class="max-w-md space-y-4">
+                <form @submit.prevent="submit()" class="max-w-xl space-y-4">
+                    <!-- Kriteria -->
                     <div class="space-y-2">
-                        <Label for="nama">Kriteria</Label>
+                        <Label for="kriteria">Kriteria</Label>
                         <Select
                             v-model="form.kriteria_id"
                             :options="kriteria"
                             optionLabel="nama_kriteria"
                             optionValue="id_kriteria"
-                            :tabindex="1"
-                            :invalid="!!form.errors.kriteria_id"
                             placeholder="Pilih kriteria"
                             class="w-full"
                         />
@@ -160,41 +226,83 @@ function doSubmit() {
                         </Message>
                     </div>
 
+                    <!-- Nama Sub Kriteria -->
                     <div class="space-y-2">
                         <Label for="nama">Nama Sub Kriteria</Label>
                         <InputText
-                            id="nama"
                             v-model="form.nama_subkriteria"
-                            type="text"
+                            id="nama"
                             class="w-full"
-                            :disabled="loading"
+                            placeholder="Contoh: Toilet Bersih"
+                            :readonly="usesRadio"
                             :invalid="!!form.errors.nama_subkriteria"
-                            placeholder="Masukkan nama sub kriteria"
                         />
-                        <Message v-if="form.errors.nama_subkriteria" severity="error" size="small" variant="simple">{{
-                            form.errors.nama_subkriteria
-                        }}</Message>
+                        <Message v-if="form.errors.nama_subkriteria" severity="error" size="small" variant="simple">
+                            {{ form.errors.nama_subkriteria }}
+                        </Message>
                     </div>
 
+                    <!-- Pilihan Checkbox -->
+                    <div v-if="usesRadio" class="space-y-2">
+                        <Label>Sub Opsi</Label>
+                        <div class="flex flex-col gap-2">
+                            <template v-if="getKriteriaName(form.kriteria_id) === 'Fasilitas'">
+                                <div v-for="item in fasilitasOptions" :key="item" class="flex items-center gap-2">
+                                    <RadioButton :inputId="item" :value="item" v-model="selectedOption" />
+                                    <label :for="item">{{ item }}</label>
+                                </div>
+                            </template>
+
+                            <template v-else-if="getKriteriaName(form.kriteria_id) === 'Transportasi'">
+                                <div v-for="item in transportasiOptions" :key="item" class="flex items-center gap-2">
+                                    <RadioButton :inputId="item" :value="item" v-model="selectedOption" />
+                                    <label :for="item">{{ item }}</label>
+                                </div>
+                            </template>
+
+                            <template v-else-if="getKriteriaName(form.kriteria_id) === 'Akses lokasi'">
+                                <div v-for="item in aksesLokasiOptions" :key="item" class="flex items-center gap-2">
+                                    <RadioButton :inputId="item" :value="item" v-model="selectedOption" />
+                                    <label :for="item">{{ item }}</label>
+                                </div>
+                            </template>
+
+                            <template v-else-if="getKriteriaName(form.kriteria_id) === 'Jenis wisata'">
+                                <div v-for="item in jenisWisata" :key="item.id_jenis_wisata" class="flex items-center gap-2">
+                                    <RadioButton :inputId="'jw-' + item.id_jenis_wisata" :value="item.nama_jenis_wisata" v-model="selectedOption" />
+                                    <label :for="'jw-' + item.id_jenis_wisata">
+                                        {{ item.nama_jenis_wisata }}
+                                    </label>
+                                </div>
+                            </template>
+
+                            <template v-else>
+                                <p class="text-sm text-gray-500 italic">Tidak ada opsi tambahan untuk kriteria ini.</p>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Bobot manual jika bukan checkbox -->
                     <div class="space-y-2">
-                        <Label for="bobot_subkriteria">Bobot</Label>
+                        <Label for="bobot">Bobot</Label>
                         <InputText
-                            id="bobot_subkriteria"
                             v-model="form.bobot_subkriteria"
-                            rows="3"
-                            :invalid="!!form.errors.bobot_subkriteria"
+                            id="bobot"
                             class="w-full"
-                            :disabled="loading"
-                            placeholder="Masukkan bobot sub kriteria"
+                            type="number"
+                            placeholder="Masukkan bobot"
+                            :readonly="usesRadio && !isJenisWisata"
+                            :invalid="!!form.errors.bobot_subkriteria"
                         />
-                        <Message v-if="form.errors.bobot_subkriteria" severity="error" size="small" variant="simple">{{
-                            form.errors.bobot_subkriteria
-                        }}</Message>
+                        <Message v-if="form.errors.bobot_subkriteria" severity="error" size="small" variant="simple">
+                            {{ form.errors.bobot_subkriteria }}
+                        </Message>
                     </div>
 
+                    <!-- Tombol Simpan -->
                     <Button type="submit" label="Simpan" class="w-full" :loading="loading">
                         <template #default>
-                            <i v-if="loading" class="pi pi-spinner pi-spin mr-2"></i>
+                            <i v-if="loading" class="pi pi-spinner pi-spin mr-2" />
                             {{ props.data ? 'Update' : 'Simpan' }}
                         </template>
                     </Button>

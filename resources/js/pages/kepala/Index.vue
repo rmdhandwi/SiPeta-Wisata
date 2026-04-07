@@ -9,10 +9,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useToast } from 'vue-toast-notification';
 
 const breadcrumbItems = [
-    {
-        title: 'Laporan Potensi Wisata',
-        href: '/laporan',
-    },
+    { title: 'Laporan Potensi Wisata', href: '/laporan' },
 ];
 
 const page = usePage<SharedData>();
@@ -33,20 +30,15 @@ const props = defineProps<{
     }>;
 }>();
 
-watch(
-    () => page.props.flash.success,
-    (msg) => {
-        if (msg) toast.success(msg, { position: 'top-right', duration: 3000 });
-    },
-    { immediate: true },
-);
+watch(() => page.props.flash.success, (msg) => {
+    if (msg) toast.success(msg, { position: 'top-right', duration: 3000 });
+}, { immediate: true });
 
 const mapId = 'printable-map';
 let map: L.Map | null = null;
 let markers: L.Marker[] = [];
 let markerMap = new Map<string, L.Marker>();
 
-// Dropdown Filter
 const jenisWisata = [...new Set(props.lokasi.map((l) => l.jenis))];
 const selectedJenis = ref<string | null>(null);
 
@@ -57,21 +49,17 @@ const filteredLokasi = computed(() => {
         .sort((a, b) => (a.rank || 999) - (b.rank || 999));
 });
 
-const getMarkerColor = (jenis: string): string => {
-    switch (jenis.toLowerCase()) {
-        case 'wisata alam':
-            return 'green';
-        case 'wisata sejarah':
-            return 'blue';
-        case 'wisata pantai':
-            return 'orange';
-        default:
-            return 'gray';
+const dynamicColorMap = new Map<string, string>();
+const generateColor = (key: string): string => {
+    if (!dynamicColorMap.has(key)) {
+        const hue = (dynamicColorMap.size * 137.508) % 360;
+        dynamicColorMap.set(key, `hsl(${hue}, 70%, 50%)`);
     }
+    return dynamicColorMap.get(key)!;
 };
 
 const createCustomIcon = (rank: number, jenis: string): L.DivIcon => {
-    const color = getMarkerColor(jenis);
+    const color = generateColor(jenis);
     return L.divIcon({
         html: `<div style="
             background-color: ${color};
@@ -151,12 +139,10 @@ const print = () => form.post(route('laporan.cetak'));
 
 watch(selectedJenis, (val) => {
     form.jenis = val;
+    initMap();
 });
 
 onMounted(() => {
-    initMap();
-});
-watch(selectedJenis, () => {
     initMap();
 });
 </script>
@@ -166,17 +152,14 @@ watch(selectedJenis, () => {
     <AppLayout :breadcrumbs="breadcrumbItems">
         <div class="flex flex-col gap-4 p-4">
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <!-- Tombol Print -->
                 <div class="fixed right-4 bottom-4 z-50 opacity-50 transition-all hover:opacity-100">
                     <Button @click="print()" severity="info" icon="pi pi-print" label="Print" />
                 </div>
 
-                <!-- PETA -->
                 <div class="relative rounded border shadow">
                     <div id="printable-map" class="h-full w-full"></div>
                 </div>
 
-                <!-- DAFTAR -->
                 <div class="overflow-auto rounded bg-white p-4 shadow">
                     <div class="mb-6 border-b pb-4 text-center">
                         <img src="/image/logo_transparant.png" alt="Logo" class="mx-auto mb-2 h-auto w-20" />
@@ -187,7 +170,6 @@ watch(selectedJenis, () => {
                         <h3 class="mt-2 font-bold underline">Peta Sebaran Daya Tarik Wisata</h3>
                     </div>
 
-                    <!-- Filter Dropdown -->
                     <div class="mb-4">
                         <Select
                             v-model="selectedJenis"
@@ -199,26 +181,12 @@ watch(selectedJenis, () => {
                         />
                     </div>
 
-                    <!-- Keterangan Warna -->
-                    <div class="mb-4 flex flex-wrap justify-center gap-4 text-[13px]">
-                        <div class="flex items-center gap-2">
-                            <div class="h-4 w-4 rounded-full border bg-green-600"></div>
-                            <span>Wisata Alam</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="h-4 w-4 rounded-full border bg-blue-600"></div>
-                            <span>Wisata Sejarah</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="h-4 w-4 rounded-full border bg-orange-500"></div>
-                            <span>Wisata Pantai</span>
-                        </div>
-                    </div>
-
                     <h2 class="mb-4 text-center text-xl font-bold">Daftar Lokasi Berdasarkan Ranking</h2>
 
                     <ul class="columns-2 text-sm md:columns-3">
-                        <li v-for="lokasi in filteredLokasi" :key="lokasi.nama" class="mb-1">{{ lokasi.rank }}. {{ lokasi.nama }}</li>
+                        <li v-for="lokasi in filteredLokasi" :key="lokasi.nama" class="mb-1">
+                            {{ lokasi.rank }}. {{ lokasi.nama }}
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -227,7 +195,7 @@ watch(selectedJenis, () => {
 </template>
 
 <style scoped>
-#map {
+/* #printable-map {
     height: 500px;
-}
+} */
 </style>
