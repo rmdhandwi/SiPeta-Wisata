@@ -1,0 +1,377 @@
+================================================================================
+  ____  _ ____  _                     _      ___ ____    _  _____  _    
+ / ___|(_)  _ \ ___| |_ __ _  __      ___(_)___  / _ \___ / |/ /_  _| |_  
+ \___ \| | |_) / _ \ __/ _` | \ \ /\ / / / / __|| | | / __|| | '_ \ \ \/ / 
+  ___) | |  __/  __/ || (_| |  \ V  V /| | \__ \| |_| \__ \| | | | | >  <  
+ |____/|_|_|   \___|\__\__,_|   \_/\_/ |_|_|___/ \___/|___/|_|_| |_/_/\_\ 
+                                                                          
+  PANDUAN PENGGUNAAN & DOKUMENTASI SISTEM INFORMASI GEOGRAFIS (SIG)
+  PEMETAAN DAN REKOMENDASI DESTINASI WISATA POTENSIAL (TOPSIS)
+================================================================================
+
+Aplikasi "SiPeta-Wisata" adalah sebuah platform Sistem Informasi Geografis (SIG)
+dan Sistem Pendukung Keputusan (SPK) yang dirancang khusus untuk memetakan sebaran
+destinasi wisata serta menganalisis dan merekomendasikan lokasi wisata yang paling
+potensial untuk dikembangkan atau dijadikan tempat investasi. 
+
+Sistem ini menggabungkan visualisasi peta interaktif dengan perhitungan matematis
+Metode TOPSIS (Technique for Order of Preference by Similarity to Ideal Solution)
+secara real-time.
+
+--------------------------------------------------------------------------------
+DAFTAR ISI:
+--------------------------------------------------------------------------------
+1. PENDAHULUAN & ARSITEKTUR SISTEM
+2. TEKNOLOGI YANG DIGUNAKAN (TECH STACK)
+3. HAK AKSES PENGGUNA (USER ROLES & CREDENTIALS)
+4. STRUKTUR DATABASE & DATA SEEDING
+5. ALUR METODE TOPSIS PADA APLIKASI
+6. PANDUAN INSTALASI & DEPLOYMENT LOKAL
+7. PANDUAN PENGGUNAAN SISTEM (ADMIN, KEPALA, INVESTOR)
+8. FITUR SPESIAL & TROUBLESHOOTING
+
+
+================================================================================
+1. PENDAHULUAN & ARSITEKTUR SISTEM
+================================================================================
+SiPeta-Wisata dirancang untuk mengatasi permasalahan dalam penentuan prioritas
+pengembangan destinasi wisata daerah. Dengan adanya sistem ini:
+* Dinas Pariwisata (Kepala) dapat memantau destinasi potensial secara cepat 
+  dan mengambil kebijakan pariwisata berbasis data nyata.
+* Investor dapat mengidentifikasi lokasi investasi strategis berdasarkan aspek
+  aksesibilitas, fasilitas penunjang, keamanan, dan geografis.
+* Administrator memiliki kontrol penuh untuk memodifikasi parameter analisis
+  (kriteria & bobot) secara dinamis sesuai kebutuhan daerah.
+
+Sistem menggunakan arsitektur modern Single Page Application (SPA) melalui
+kombinasi Laravel (sebagai API & Backend) dan Vue 3 (sebagai Frontend), yang 
+dijembatani secara seamless menggunakan Inertia.js.
+
+
+================================================================================
+2. TEKNOLOGI YANG DIGUNAKAN (TECH STACK)
+================================================================================
+* Backend (Core): Laravel 12 (versi terbaru dengan performa maksimal)
+* Frontend Framework: Vue 3 (Composition API dengan TypeScript)
+* Build Tool & Bundler: Vite
+* UI Component Library: PrimeVue v4 (premium look, rich UI components)
+* CSS Framework: Tailwind CSS v4 (akses kelas modern, transisi halus)
+* GIS Engine: Leaflet.js (peta interaktif ringan, cepat, dan mobile-friendly)
+* Database: MySQL / MariaDB
+* Icon Library: Lucide Vue Next & PrimeIcons
+
+
+================================================================================
+3. HAK AKSES PENGGUNA (USER ROLES & CREDENTIALS)
+================================================================================
+Sistem mendukung tiga level pengguna dengan hak akses yang terisolasi secara aman:
+
+--------------------------------------------------------------------------------
+[A] ADMINISTRATOR (Role ID: 1)
+--------------------------------------------------------------------------------
+Memiliki hak akses penuh terhadap seluruh pengelolaan data dan konfigurasi sistem.
+* Akun Default (berdasarkan database dump `sipeta.sql`):
+  - Username: admin123
+  - Email   : admin@gmail.com
+  - Password: [Silakan gunakan fitur reset atau gunakan password yang diset saat seeding]
+
+* Fitur Utama Admin:
+  1. Dashboard statistik ringkasan data.
+  2. Manajemen Jenis Wisata (CRUD).
+  3. Manajemen Kriteria & Subkriteria (CRUD & Pengaturan Bobot Kriteria).
+  4. Manajemen Lokasi Wisata (CRUD Koordinat + Input Kriteria).
+  5. Manajemen Nilai Alternatif.
+  6. Perhitungan Otomatis & Pemetaan TOPSIS.
+  7. Kolom Dinamis (Fitur menambahkan kolom tabel database baru langsung dari UI).
+
+--------------------------------------------------------------------------------
+[B] KEPALA DINAS (Role ID: 2)
+--------------------------------------------------------------------------------
+Bertanggung jawab dalam pemantauan hasil rekomendasi serta pencetakan laporan resmi.
+* Akun Default:
+  - Username: kepala
+  - Email   : kepaladinas@gmail.com
+  - Password: [Silakan hubungi administrator atau lakukan seeding ulang]
+
+* Fitur Utama Kepala Dinas:
+  1. Dashboard ringkasan pariwisata.
+  2. Akses halaman Laporan Potensi Wisata.
+  3. Filter Data Laporan berdasarkan Jenis Wisata.
+  4. Cetak/Print Laporan Resmi Destinasi Wisata Potensial (Terurut dari peringkat 1).
+
+--------------------------------------------------------------------------------
+[C] INVESTOR / PUBLIK (Guest / Tanpa Login)
+--------------------------------------------------------------------------------
+Pengguna umum atau calon investor yang ingin melihat peluang pariwisata di daerah.
+* Akses URL: /investor
+* Fitur Utama Investor:
+  1. Dashboard Peta Interaktif (GIS).
+  2. Detail Informasi Destinasi (Fasilitas, Keamanan, Transportasi, Akses Jalan).
+  3. Peringkat Potensi Wisata untuk efisiensi analisis investasi.
+
+
+================================================================================
+4. STRUKTUR DATABASE & DATA SEEDING
+================================================================================
+Tabel-tabel utama yang menggerakkan sistem rekomendasi ini:
+
+1. `users`             : Menyimpan data pengguna (Admin & Kepala Dinas).
+2. `jenis_wisata`      : Kategori wisata (contoh: Wisata Alam, Sejarah, Pantai).
+3. `kriteria`          : Kriteria evaluasi TOPSIS (contoh: Fasilitas, Keamanan, dll).
+4. `subkriteria`       : Skala penilaian kriteria lengkap dengan bobot nilai (1-5).
+5. `lokasi_wisata`     : Lokasi fisik, koordinat GIS (Latitude, Longitude), 
+                         serta kolom kriteria dinamis.
+6. `nilai_alternatif`  : Penghubung lokasi wisata dengan bobot subkriteria.
+7. `hasil_topsis`      : Tempat penyimpanan hasil kalkulasi TOPSIS (jarak positif,
+                         jarak negatif, nilai preferensi, dan peringkat akhir).
+
+--------------------------------------------------------------------------------
+KONFIGURASI KRITERIA & BOBOT AWAL (Sistem Default)
+--------------------------------------------------------------------------------
+Sistem diinisialisasi dengan 5 kriteria utama (Total Bobot Kriteria WAJIB = 100%):
+* C1: Jenis Wisata  (Bobot: 15% | Tipe: Benefit)
+* C2: Fasilitas     (Bobot: 25% | Tipe: Benefit)
+* C3: Keamanan      (Bobot: 25% | Tipe: Benefit)
+* C4: Transportasi  (Bobot: 15% | Tipe: Benefit)
+* C5: Akses Lokasi  (Bobot: 20% | Tipe: Benefit)
+
+--------------------------------------------------------------------------------
+DAFTAR SUBKRITERIA & BOBOT NILAI AWAL
+--------------------------------------------------------------------------------
+* C1 - Jenis Wisata:
+  - Wisata Alam  -> Nilai: 5
+  - Wisata Sejarah -> Nilai: 3
+  - Wisata Pantai -> Nilai: 1
+
+* C2 - Fasilitas (Mendukung Multi-Pilihan):
+  - Spot Foto -> Nilai: 5
+  - Tempat Makan -> Nilai: 4
+  - Toilet -> Nilai: 3
+  - Tempat Parkir -> Nilai: 2
+  - Tempat Sampah -> Nilai: 1
+
+* C3 - Keamanan:
+  - Aman -> Nilai: 5
+  - Tidak Aman -> Nilai: 1
+
+* C4 - Transportasi:
+  - Mobil -> Nilai: 5
+  - Motor -> Nilai: 3
+  - Perahu -> Nilai: 1
+
+* C5 - Akses Lokasi:
+  - Akses jalan mulus dan lebar -> Nilai: 5
+  - Akses jalan luas -> Nilai: 4
+  - Akses jalan sempit -> Nilai: 3
+  - Akses jalan berlubang -> Nilai: 1
+
+
+================================================================================
+5. ALUR METODE TOPSIS PADA APLIKASI
+================================================================================
+Proses perhitungan TOPSIS berjalan otomatis di dalam `HasilTopsisController.php`
+melalui langkah-langkah sistematis berikut:
+
+1. PEMBENTUKAN MATRIKS KEPUTUSAN (X):
+   Sistem menarik seluruh nilai subkriteria dari setiap lokasi wisata (alternatif)
+   terhadap 5 kriteria yang telah ditetapkan.
+
+2. NORMALISASI MATRIKS (R):
+   Setiap elemen matriks keputusan dinormalisasi dengan membaginya dengan akar kuadrat
+   dari jumlah kuadrat seluruh nilai kriteria tersebut:
+   Formula: R_ij = X_ij / sqrt( sum( X_ij^2 ) )
+
+3. PEMBOBOTAN MATRIKS TERAKTUALISASI (V):
+   Mengalikan matriks normalisasi (R) dengan bobot kriteria masing-masing (W):
+   Formula: V_ij = W_j * R_ij
+
+4. PENENTUAN SOLUSI IDEAL POSITIF (A+) & SOLUSI IDEAL NEGATIF (A-):
+   * A+ mengambil nilai maksimal untuk kriteria Benefit dan minimal untuk kriteria Cost.
+   * A- mengambil nilai minimal untuk kriteria Benefit dan maksimal untuk kriteria Cost.
+
+5. PERHITUNGAN JARAK SOLUSI IDEAL (D+ & D-):
+   * D+ (Jarak ke Solusi Ideal Positif):
+     Formula: D_i+ = sqrt( sum( (V_ij - A_j+)^2 ) )
+   * D- (Jarak ke Solusi Ideal Negatif):
+     Formula: D_i- = sqrt( sum( (V_ij - A_j-)^2 ) )
+
+6. PERHITUNGAN PREFERENSI (V_i) & PERANGKINGAN:
+   Nilai preferensi dihitung untuk setiap alternatif. Nilai ini berkisar antara 0 - 1.
+   Formula: V_i = D_i- / (D_i+ + D_i-)
+   Semakin mendekati angka 1, semakin potensial alternatif lokasi wisata tersebut.
+   Sistem mengurutkan nilai V_i dari yang terbesar hingga terkecil untuk 
+   menghasilkan peringkat (Ranking).
+
+
+================================================================================
+6. PANDUAN INSTALASI & DEPLOYMENT LOKAL
+================================================================================
+Ikuti langkah-langkah di bawah ini untuk menjalankan aplikasi di komputer lokal:
+
+PRASYARAT (PREREQUISITES):
+* PHP >= 8.2 (Sangat disarankan menggunakan PHP 8.3)
+* Composer (Dependency Manager untuk PHP)
+* Node.js >= 18 & NPM (Untuk compile modul frontend & Tailwind v4)
+* Web Server & Database: Laragon (Direkomendasikan), XAMPP, atau Laravel Sail.
+
+LANGKAH INSTALASI:
+
+Langkah 1: Ekstrak atau Buka Folder Project
+Pastikan folder d:/laragon/www/SiPeta-Wisata telah siap.
+
+Langkah 2: Konfigurasi Environment File
+1. Salin `.env.example` menjadi `.env`
+2. Buka `.env` dan atur koneksi database Anda:
+   -------------------------------------------------
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=sipeta
+   DB_USERNAME=root
+   DB_PASSWORD=
+   -------------------------------------------------
+
+Langkah 3: Install Dependensi PHP (Laravel)
+Buka terminal (PowerShell / Command Prompt) di direktori project, lalu jalankan:
+> composer install
+
+Langkah 4: Jalankan Migrasi & Import Database Default
+1. Buat database baru bernama `sipeta` di phpMyAdmin atau DBMS Anda.
+2. Anda dapat mengimpor database contoh siap pakai yang sudah dilengkapi 28 destinasi
+   wisata serta nilai kriteria lengkap dari file SQL yang tersedia:
+   * Lokasi File: `database/sipeta.sql`
+   * Import menggunakan phpMyAdmin, Laragon Database Tool, atau Terminal:
+     > mysql -u root -p sipeta < database/sipeta.sql
+3. Jika ingin memulai database kosong, jalankan migrasi Laravel:
+     > php artisan migrate --seed
+
+Langkah 5: Install Dependensi Javascript (Vue, PrimeVue, Leaflet)
+Jalankan perintah berikut di terminal:
+> npm install
+
+Langkah 6: Generate Application Key
+> php artisan key:generate
+
+Langkah 7: Menjalankan Server Pengembangan (Localhost)
+Untuk mempermudah, jalankan perintah development terintegrasi (concurrently):
+> composer dev
+Perintah di atas akan secara otomatis menjalankan 3 layanan sekaligus:
+1. Laravel Development Server (`php artisan serve`) di http://127.0.0.1:8000
+2. Queue Listener (`php artisan queue:listen`)
+3. Vite Frontend Server (`npm run dev`) untuk hot-reloading Vue 3 & Tailwind v4.
+
+Jika Anda ingin menjalankannya secara terpisah di terminal yang berbeda:
+* Terminal 1 (Backend): php artisan serve
+* Terminal 2 (Frontend): npm run dev
+
+
+================================================================================
+7. PANDUAN PENGGUNAAN SISTEM (MANUAL PENGGUNA)
+================================================================================
+
+--------------------------------------------------------------------------------
+[A] HALAMAN UTAMA & LOGIN
+--------------------------------------------------------------------------------
+1. Akses http://127.0.0.1:8000 di peramban (browser) Anda.
+2. Klik tombol "Login" di pojok kanan atas.
+3. Masukkan Email dan Password akun Anda (sesuai peran Anda).
+4. Klik "Login" untuk masuk ke dashboard utama.
+
+--------------------------------------------------------------------------------
+[B] BAGI ADMINISTRATOR (MANAJEMEN & KALKULASI)
+--------------------------------------------------------------------------------
+
+Langkah 1: Mengelola Jenis Wisata
+* Masuk ke menu "Jenis Wisata" di panel admin.
+* Gunakan tombol "Tambah" untuk membuat jenis baru (misal: Wisata Kuliner).
+* Data ini akan otomatis menjadi opsi pilihan saat menambahkan Lokasi Wisata.
+
+Langkah 2: Mengelola Kriteria & Subkriteria (PENTING!)
+* Buka menu "Kriteria". Pastikan total bobot dari seluruh kriteria adalah 100%.
+  Jika total bobot TIDAK 100%, sistem secara otomatis akan memblokir proses TOPSIS
+  dan meminta Anda memperbaikinya terlebih dahulu demi keabsahan matematis.
+* Masuk ke menu "Subkriteria" untuk memberikan rincian bobot (1-5) pada tiap kriteria.
+  Subkriteria bertindak sebagai instrumen penilaian parameter objek wisata.
+
+Langkah 3: Menginput Lokasi Wisata (GIS & Pemetaan)
+* Masuk ke menu "Lokasi Wisata", lalu klik "Tambah Data".
+* Masukkan Nama Lokasi Wisata.
+* Pilih Jenis Wisata.
+* Masukkan koordinat geografis yang tepat (Latitude dan Longitude). 
+  (Tips: Koordinat bisa didapatkan dari Google Maps).
+* Tentukan nilai aspek Lokasi dengan memilih opsi Subkriteria yang tersedia 
+  (Fasilitas, Keamanan, Transportasi, Akses Lokasi).
+* Klik "Simpan". Sistem secara otomatis akan mencatat nilai alternatif tersebut.
+
+Langkah 4: Fitur Kolom Dinamis (Dynamic Custom Column)
+* SiPeta-Wisata dilengkapi dengan fitur super premium untuk menambah kolom kriteria baru.
+* Pada tabel Lokasi Wisata, klik "Tambah Kolom".
+* Ketikkan nama kolom baru yang diinginkan, sistem secara otomatis akan melakukan
+  generasi skema tabel database (`Schema::table`) di backend secara real-time.
+* Kolom baru tersebut akan langsung tersedia di formulir input lokasi wisata!
+
+Langkah 5: Perhitungan TOPSIS & Peringkat Potensi
+* Klik menu "Hasil TOPSIS".
+* Sistem akan memproses seluruh perhitungan TOPSIS (Matriks Awal -> Normalisasi ->
+  Matriks Terbobot -> Solusi Ideal -> Jarak Ideal -> Preferensi -> Perangkingan).
+* Hasilnya akan disajikan secara visual dalam tab-tab terstruktur dan premium.
+* Buka menu "Pemetaan" untuk melihat visualisasi GIS lokasi wisata dengan penanda (marker)
+  warna pada Leaflet Map sesuai hasil perangkingan TOPSIS-nya.
+
+--------------------------------------------------------------------------------
+[C] BAGI KEPALA DINAS (MONITORING & PELAPORAN)
+--------------------------------------------------------------------------------
+1. Login dengan menggunakan akun Kepala Dinas.
+2. Pada Dashboard, Anda dapat melihat statistik jumlah wisata dan ringkasan lokasi.
+3. Masuk ke menu "Laporan Wisata".
+4. Gunakan fitur "Filter Jenis Wisata" untuk menyortir data berdasarkan jenis tertentu.
+5. Klik tombol "Cetak Laporan" (Print).
+6. Sistem akan mengarahkan ke halaman cetak layout premium yang siap diprint atau
+   disimpan sebagai file PDF (Ctrl + P) untuk diserahkan ke jajaran pimpinan daerah.
+
+--------------------------------------------------------------------------------
+[D] BAGI INVESTOR / PUBLIK (ANALISIS INVESTASI)
+--------------------------------------------------------------------------------
+1. Akses halaman /investor secara langsung tanpa perlu login.
+2. Anda akan disuguhkan Peta Interaktif Leaflet berskala penuh.
+3. Klik pada penanda (marker) wisata pada peta untuk membuka pop-up informasi.
+4. Pop-up akan menampilkan informasi lengkap destinasi:
+   - Nama Destinasi & Jenis Wisata.
+   - Peringkat Potensi (Hasil TOPSIS) untuk rekomendasi kelayakan investasi.
+   - Detail fasilitas penunjang, aksesibilitas transportasi, keamanan, dan jalan.
+
+
+================================================================================
+8. FITUR SPESIAL & TROUBLESHOOTING
+================================================================================
+
+--------------------------------------------------------------------------------
+MASALAH: Error "Total bobot harus 100, sekarang: X" saat membuka Hasil TOPSIS
+--------------------------------------------------------------------------------
+* Penyebab: Jumlah persentase bobot dari seluruh kriteria di database tidak bernilai 100%.
+* Solusi  : Buka menu Kriteria sebagai Administrator. Edit bobot masing-masing kriteria
+            sehingga apabila dijumlahkan nilainya pas 100%. Setelah itu, buka kembali 
+            Hasil TOPSIS untuk memulai kalkulasi otomatis.
+
+--------------------------------------------------------------------------------
+MASALAH: Peta Leaflet tidak memuat peta dasar (Basemap) / Abu-abu saja
+--------------------------------------------------------------------------------
+* Penyebab: Komputer tidak terhubung ke internet, sehingga gagal memuat tile map Leaflet.
+* Solusi  : Pastikan koneksi internet stabil saat menjalankan aplikasi agar peta satelit
+            dan jalan dari OpenStreetMap dapat dimuat dengan lancar.
+
+--------------------------------------------------------------------------------
+MASALAH: Penanda (Marker) Peta tidak muncul
+--------------------------------------------------------------------------------
+* Penyebab: Lokasi wisata belum diset nilai koordinat Latitude & Longitude-nya atau
+            perhitungan TOPSIS belum dijalankan (tabel `hasil_topsis` kosong).
+* Solusi  : 
+  1. Pastikan setiap lokasi wisata memiliki koordinat latitude (nilai negatif di Indonesia,
+     misal -2.xxxx) dan longitude (misal 140.xxxx).
+  2. Buka menu Hasil TOPSIS sebagai admin terlebih dahulu untuk memicu kalkulasi
+     dan mengisi tabel hasil perangkingan pariwisata.
+
+================================================================================
+          DOKUMENTASI SISTEM INFORMASI GEOGRAFIS "SIPETA-WISATA"
+           Hak Cipta Terlindungi (c) 2026. Dikembangkan secara Premium.
+================================================================================
